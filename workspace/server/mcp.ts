@@ -82,7 +82,7 @@ function nodeMatches(n: GNode, q: string): boolean {
 
 function searchTool(args: Record<string, unknown>): unknown {
   const q = String(args.query ?? "");
-  const limit = Math.min(50, Number(args.limit) || 20);
+  const limit = Math.max(1, Math.min(50, Number(args.limit) || 20));
   if (!graph) return { content: [{ type: "text", text: "graph not available" }], isError: true };
   const hits = graph.nodes().filter((n) => nodeMatches(n, q)).slice(0, limit);
   return {
@@ -139,7 +139,7 @@ function queryTool(args: Record<string, unknown>): unknown {
 }
 
 function snapshotTool(args: Record<string, unknown>): unknown {
-  const limit = Math.min(200, Number(args.limit) || 50);
+  const limit = Math.max(1, Math.min(200, Number(args.limit) || 50));
   if (!graph) return { content: [{ type: "text", text: "graph not available" }], isError: true };
   graph.refresh?.();
   const nodes = graph.nodes();
@@ -250,6 +250,7 @@ function handleMessage(msg: RpcRequest): unknown {
     case "tools/list_changed":
       return rpcResult(msg.id, {});
     default:
+      if (msg.id === undefined) return null; // notification — never respond
       return rpcError(msg.id, -32601, `method not found: ${msg.method}`);
   }
 }
