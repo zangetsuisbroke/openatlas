@@ -1,0 +1,25 @@
+{
+  "name": "openatlas-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "opencode harness: auto-captures reasoning into openatlas memory",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "bun build ./src/index.ts --target=bun --outdir=dist",
+    "typecheck": "bunx tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "openatlas-engine": "workspace:*"
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": "latest",
+    "@types/bun": "latest",
+    "typescript": "latest"
+  }
+}

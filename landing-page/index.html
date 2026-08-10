@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenAtlas | Persistent Memory & Reasoning Engine for OpenCode Agents</title>
+  <meta name="description" content="OpenAtlas delivers persistent local memory for OpenCode sessions with auto reasoning capture, 3-layer knowledge graphs, and zero-LLM SQLite retrieval.">
+
+  <!-- Premium Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Subtle Structural Grid Overlay -->
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- NAVIGATION -->
+  <header class="header">
+    <div class="nav-container">
+      <a href="#" class="brand">
+        <div class="brand-symbol">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">OpenAtlas</span>
+          <span class="brand-version">v0.1.0</span>
+        </div>
+      </a>
+
+      <nav class="nav-menu">
+        <a href="#hero" class="nav-link active">Overview</a>
+        <a href="#simulator" class="nav-link">Graph Core</a>
+        <a href="#features" class="nav-link">Architecture</a>
+        <a href="#cli" class="nav-link">CLI & MCP</a>
+        <a href="#download" class="nav-link">Downloads</a>
+      </nav>
+
+      <div class="nav-cta">
+        <a href="https://github.com" target="_blank" rel="noopener" class="btn-github">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+        <a href="#download" class="btn-primary">Download v0.1.0</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO SECTION -->
+    <section class="hero-section" id="hero">
+      <div class="hero-container">
+        
+        <div class="status-tag">
+          <span class="status-dot"></span>
+          <span>Native SQLite Memory Engine — Zero-LLM Recall Overhead</span>
+        </div>
+
+        <h1 class="hero-heading">
+          Persistent Reasoning Memory<br>
+          <span class="accent-text">for AI Coding Agents</span>
+        </h1>
+
+        <p class="hero-subheading">
+          OpenAtlas captures agent thoughts, file mutations, and decision trees in a 3-layer local graph. Instant mid-session context recovery without burning LLM context windows.
+        </p>
+
+        <!-- Command Terminal Box -->
+        <div class="hero-terminal">
+          <div class="terminal-bar">
+            <div class="terminal-dots">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="terminal-title">quickstart — bash</div>
+            <button class="copy-btn" onclick="copyText('npx openatlas init && openatlas serve', 'Quickstart command copied')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div class="terminal-body">
+            <div class="line"><span class="prompt">$</span> <span class="cmd">npx openatlas init</span> <span class="comment"># Initialize SQLite graph vault</span></div>
+            <div class="line"><span class="prompt">$</span> <span class="cmd">openatlas serve --port 7400</span> <span class="comment"># Start local IPC memory engine</span></div>
+            <div class="line output"><span class="success">✓</span> Engine listening at ws://127.0.0.1:7400 | Graph Nodes: 1,482 | Vector Index: Ready</div>
+          </div>
+        </div>
+
+        <!-- Metrics Strip -->
+        <div class="metrics-strip">
+          <div class="metric-item">
+            <span class="metric-value">&lt; 1.2ms</span>
+            <span class="metric-label">SQLite Hybrid Recall Latency</span>
+          </div>
+          <div class="metric-divider"></div>
+          <div class="metric-item">
+            <span class="metric-value">100% Local</span>
+            <span class="metric-label">On-Device SQLite Storage</span>
+          </div>
+          <div class="metric-divider"></div>
+          <div class="metric-item">
+            <span class="metric-value">3-Layer</span>
+            <span class="metric-label">Session, Memory & Knowledge Graph</span>
+          </div>
+          <div class="metric-divider"></div>
+          <div class="metric-item">
+            <span class="metric-value">16+ Agents</span>
+            <span class="metric-label">Universal MCP & Tooling Support</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- LIVE GRAPH CORE SIMULATOR -->
+    <section class="section simulator-section" id="simulator">
+      <div class="section-container">
+        
+        <div class="section-header text-center">
+          <div class="eyebrow">Interactive Engine Core</div>
+          <h2 class="section-title">Live 3-Layer Knowledge Graph Explorer</h2>
+          <p class="section-desc">Click graph nodes to inspect real-time reasoning frames, SQLite vectors, and active session linkage.</p>
+        </div>
+
+        <div class="simulator-card">
+          <!-- Left: SVG Canvas Graph -->
+          <div class="graph-canvas-container">
+            <div class="graph-toolbar">
+              <span class="toolbar-label">GRAPH VIEW MODE:</span>
+              <button class="graph-tab active" data-mode="all" onclick="filterGraph('all', this)">All Layers</button>
+              <button class="graph-tab" data-mode="session" onclick="filterGraph('session', this)">Session Layer</button>
+              <button class="graph-tab" data-mode="memory" onclick="filterGraph('memory', this)">Memory Nodes</button>
+              <button class="graph-tab" data-mode="knowledge" onclick="filterGraph('knowledge', this)">Knowledge Clusters</button>
+            </div>
+
+            <div class="svg-wrapper">
+              <svg id="interactive-graph" viewBox="0 0 700 450">
+                <!-- Links -->
+                <g class="graph-links">
+                  <line x1="120" y1="140" x2="260" y2="100" class="link-line link-session" />
+                  <line x1="260" y1="100" x2="420" y2="130" class="link-line link-memory" />
+                  <line x1="420" y1="130" x2="580" y2="90" class="link-line link-knowledge" />
+                  <line x1="260" y1="100" x2="300" y2="250" class="link-line link-memory" />
+                  <line x1="300" y1="250" x2="480" y2="280" class="link-line link-knowledge" />
+                  <line x1="420" y1="130" x2="480" y2="280" class="link-line link-knowledge" />
+                  <line x1="120" y1="140" x2="180" y2="310" class="link-line link-session" />
+                  <line x1="180" y1="310" x2="300" y2="250" class="link-line link-session" />
+                </g>
+
+                <!-- Nodes -->
+                <g class="graph-nodes">
+                  <!-- Node 1: Session Init -->
+                  <g class="node-group node-session active" data-id="N-01" data-title="Electron Shell Hardening" data-type="Session Frame" data-confidence="0.99" data-layer="Session Layer" data-payload='{"processTree": "taskkill /F /T", "platform": "win32", "ptyHost": "node-pty vendor"}' onclick="inspectNode('N-01', this)">
+                    <circle cx="120" cy="140" r="14" class="node-circle node-c-cyan" />
+                    <text x="120" y="170" class="node-text">N-01: PTY Host Shell</text>
+                  </g>
+
+                  <!-- Node 2: Bun Backend -->
+                  <g class="node-group node-memory" data-id="N-02" data-title="Standalone Bun Backend Execution" data-type="Memory Frame" data-confidence="0.97" data-layer="Memory Layer" data-payload='{"binary": "atlas-workspace.exe", "size": "340.5MB", "embeddedAssets": 33}' onclick="inspectNode('N-02', this)">
+                    <circle cx="260" cy="100" r="16" class="node-circle node-c-blue" />
+                    <text x="260" y="75" class="node-text">N-02: Bun Server Single-Exe</text>
+                  </g>
+
+                  <!-- Node 3: SQLite Hybrid Index -->
+                  <g class="node-group node-knowledge" data-id="N-03" data-title="SQLite Vector FTS5 Hybrid Recall" data-type="Knowledge Node" data-confidence="0.98" data-layer="Knowledge Layer" data-payload='{"fts5": "OK", "vectorDim": 384, "recallTimeMs": 0.84}' onclick="inspectNode('N-03', this)">
+                    <circle cx="420" cy="130" r="18" class="node-circle node-c-emerald" />
+                    <text x="420" y="102" class="node-text">N-03: SQLite Vector Engine</text>
+                  </g>
+
+                  <!-- Node 4: MCP Global Registry -->
+                  <g class="node-group node-knowledge" data-id="N-04" data-title="Vercel & Git MCP Registration" data-type="Knowledge Node" data-confidence="1.0" data-layer="Knowledge Layer" data-payload='{"mcpVercel": "active", "mcpGit": "active", "agentConfigs": 16}' onclick="inspectNode('N-04', this)">
+                    <circle cx="580" cy="90" r="15" class="node-circle node-c-emerald" />
+                    <text x="580" y="120" class="node-text">N-04: Universal MCP Registry</text>
+                  </g>
+
+                  <!-- Node 5: Obsidian Vault Sync -->
+                  <g class="node-group node-session" data-id="N-05" data-title="Obsidian Graph Sync Engine" data-type="Session Frame" data-confidence="0.95" data-layer="Session Layer" data-payload='{"vaultPath": "D:\\ggggggggggg\\obsidian vault opencode", "wikilinks": "enabled"}' onclick="inspectNode('N-05', this)">
+                    <circle cx="180" cy="310" r="14" class="node-circle node-c-cyan" />
+                    <text x="180" y="340" class="node-text">N-05: Vault Wikilink Engine</text>
+                  </g>
+
+                  <!-- Node 6: Design System Subnode -->
+                  <g class="node-group node-memory" data-id="N-06" data-title="Vanguard Agency Design Tokens" data-type="Memory Frame" data-confidence="0.96" data-layer="Memory Layer" data-payload='{"palette": "Monochrome Void + Sapphire", "typography": "Space Grotesk + Inter", "skills": "frontend-design"}' onclick="inspectNode('N-06', this)">
+                    <circle cx="300" cy="250" r="15" class="node-circle node-c-blue" />
+                    <text x="300" y="280" class="node-text">N-06: Studio Design Tokens</text>
+                  </g>
+
+                  <!-- Node 7: Windows Executables -->
+                  <g class="node-group node-knowledge" data-id="N-07" data-title="Windows Desktop Installer Artifacts" data-type="Knowledge Node" data-confidence="1.0" data-layer="Knowledge Layer" data-payload='{"nsisSetup": "167.8MB", "portableExe": "167.6MB", "status": "Built & Verified"}' onclick="inspectNode('N-07', this)">
+                    <circle cx="480" cy="280" r="17" class="node-circle node-c-emerald" />
+                    <text x="480" y="310" class="node-text">N-07: Production Executables</text>
+                  </g>
+                </g>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Right: Inspector Panel -->
+          <div class="inspector-panel">
+            <div class="inspector-header">
+              <span class="panel-tag">NODE INSPECTOR</span>
+              <span class="node-id-badge" id="insp-id">N-01</span>
+            </div>
+
+            <div class="inspector-body">
+              <h3 class="insp-title" id="insp-title">Electron Shell Hardening</h3>
+              
+              <div class="insp-row">
+                <span class="insp-label">Layer:</span>
+                <span class="insp-val layer-val" id="insp-layer">Session Layer</span>
+              </div>
+              <div class="insp-row">
+                <span class="insp-label">Type:</span>
+                <span class="insp-val" id="insp-type">Session Frame</span>
+              </div>
+              <div class="insp-row">
+                <span class="insp-label">Confidence:</span>
+                <span class="insp-val text-success" id="insp-confidence">0.99</span>
+              </div>
+
+              <div class="payload-box">
+                <div class="payload-header">Raw SQLite Payload Frame</div>
+                <pre class="payload-json" id="insp-payload">
+{
+  "processTree": "taskkill /F /T",
+  "platform": "win32",
+  "ptyHost": "node-pty vendor"
+}</pre>
+              </div>
+
+              <button class="btn-secondary w-full" onclick="simulateRecall()">Trigger Zero-LLM Recall</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ARCHITECTURE FEATURES SECTION -->
+    <section class="section features-section" id="features">
+      <div class="section-container">
+        
+        <div class="section-header">
+          <div class="eyebrow">Engine Architecture</div>
+          <h2 class="section-title">Built for High-Fidelity Agent Memory</h2>
+          <p class="section-desc">Traditional context windows lose critical decisions during long coding runs. OpenAtlas provides deterministic, structural memory.</p>
+        </div>
+
+        <div class="grid-3">
+          <!-- Card 1 -->
+          <div class="feature-card">
+            <div class="card-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+              </svg>
+            </div>
+            <h3 class="card-title">Native SQLite & Vector Hybrid</h3>
+            <p class="card-desc">Combines SQLite FTS5 full-text search with local vector embeddings. Retrieve relevant code context, architectural choices, and prior fixes in &lt;1.2ms.</p>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="feature-card">
+            <div class="card-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3ZM6 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3Z"/>
+                <path d="M18 8H6M18 16H6"/>
+              </svg>
+            </div>
+            <h3 class="card-title">3-Layer Graph Architecture</h3>
+            <p class="card-desc">Organizes data hierarchically into Session Frames, Memory Nodes, and Knowledge Clusters. Preserves long-term project intent across independent subagent invocations.</p>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="feature-card">
+            <div class="card-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+            </div>
+            <h3 class="card-title">Desktop Shell & Bun Backend</h3>
+            <p class="card-desc">Bundled as a standalone Bun single-file executable backend with an Electron PTY terminal shell. Instant launch with zero external Node runtime dependencies.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- CLI & MCP REFERENCE SECTION -->
+    <section class="section cli-section" id="cli">
+      <div class="section-container">
+        
+        <div class="section-header">
+          <div class="eyebrow">Command Line & Tooling</div>
+          <h2 class="section-title">Developer & MCP Interface</h2>
+          <p class="section-desc">Manage memory vaults, query reasoning nodes, or serve IPC endpoints directly from the command line.</p>
+        </div>
+
+        <div class="cli-card">
+          <div class="cli-tabs">
+            <button class="cli-tab active" onclick="switchCliTab('init', this)">openatlas init</button>
+            <button class="cli-tab" onclick="switchCliTab('search', this)">openatlas search</button>
+            <button class="cli-tab" onclick="switchCliTab('serve', this)">openatlas serve</button>
+            <button class="cli-tab" onclick="switchCliTab('mcp', this)">mcp config</button>
+          </div>
+
+          <div class="cli-content-box">
+            <!-- Tab 1: init -->
+            <div class="cli-pane active" id="cli-pane-init">
+              <div class="cli-code-wrap">
+                <pre><code><span class="c-comment"># Initialize a new SQLite memory vault in the current project</span>
+<span class="c-prompt">$</span> npx openatlas init --path ./.openatlas
+
+<span class="c-success">✓</span> Created database schema at ./.openatlas/vault.db
+<span class="c-success">✓</span> Initialized FTS5 full-text table
+<span class="c-success">✓</span> Generated project configuration opencode.json</code></pre>
+              </div>
+            </div>
+
+            <!-- Tab 2: search -->
+            <div class="cli-pane" id="cli-pane-search">
+              <div class="cli-code-wrap">
+                <pre><code><span class="c-comment"># Query local memory vault using hybrid vector-FTS search</span>
+<span class="c-prompt">$</span> openatlas search "Electron process tree termination"
+
+<span class="c-accent">RESULT [0.99 match]:</span> Node N-01 (Session Layer)
+<span class="c-dim">File:</span> desktop/main.js
+<span class="c-dim">Summary:</span> Added process tree termination via taskkill /F /T /PID on Windows on exit.</code></pre>
+              </div>
+            </div>
+
+            <!-- Tab 3: serve -->
+            <div class="cli-pane" id="cli-pane-serve">
+              <div class="cli-code-wrap">
+                <pre><code><span class="c-comment"># Start the background IPC memory daemon</span>
+<span class="c-prompt">$</span> openatlas serve --port 7400 --db ./.openatlas/vault.db
+
+<span class="c-success">✓</span> IPC WebSocket server running at ws://127.0.0.1:7400
+<span class="c-success">✓</span> MCP Server ready for OpenCode, Claude Code, Cursor & VS Code</code></pre>
+              </div>
+            </div>
+
+            <!-- Tab 4: mcp -->
+            <div class="cli-pane" id="cli-pane-mcp">
+              <div class="cli-code-wrap">
+                <pre><code><span class="c-comment"># Add Git & Vercel MCP servers globally across 16 agent configs</span>
+<span class="c-prompt">$</span> npx add-mcp mcp-server-git -y --all
+<span class="c-prompt">$</span> npx add-mcp mcp-vercel-github-integration -y --all
+
+<span class="c-success">✓</span> Installed to Antigravity, OpenCode, Claude Code, Cursor, VS Code, etc.</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- DOWNLOAD SECTION -->
+    <section class="section download-section" id="download">
+      <div class="section-container">
+        
+        <div class="section-header text-center">
+          <div class="eyebrow">Production Binaries</div>
+          <h2 class="section-title">Download OpenAtlas v0.1.0</h2>
+          <p class="section-desc">Standalone Windows installers, portable executables, and Bun backend server binaries ready for production deployment.</p>
+        </div>
+
+        <div class="download-grid">
+          
+          <!-- Download Card 1: Setup Installer -->
+          <div class="download-card highlight-card">
+            <div class="card-badge">RECOMMENDED FOR WINDOWS</div>
+            <div class="download-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </div>
+            <h3 class="dl-title">AtlasWorkspace Setup (Installer)</h3>
+            <p class="dl-subtitle">Full Windows NSIS Setup Installer with desktop shortcuts and auto-updater.</p>
+            
+            <div class="dl-meta">
+              <span class="meta-tag">Version: 0.1.0</span>
+              <span class="meta-tag">Size: 167.8 MB</span>
+              <span class="meta-tag">Arch: x64</span>
+            </div>
+
+            <div class="dl-path-box">
+              <span class="path-label">Local File Location:</span>
+              <code class="path-code">D:\ggggggggggg\openatlas\desktop\dist\AtlasWorkspace Setup 0.1.0.exe</code>
+            </div>
+
+            <a href="file:///D:/ggggggggggg/openatlas/desktop/dist/AtlasWorkspace%20Setup%200.1.0.exe" class="btn-primary w-full text-center">Download NSIS Installer</a>
+          </div>
+
+          <!-- Download Card 2: Portable Desktop App -->
+          <div class="download-card">
+            <div class="card-badge badge-neutral">NO INSTALLATION REQUIRED</div>
+            <div class="download-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
+              </svg>
+            </div>
+            <h3 class="dl-title">AtlasWorkspace Portable</h3>
+            <p class="dl-subtitle">Single portable executable file. Run immediately without installation.</p>
+            
+            <div class="dl-meta">
+              <span class="meta-tag">Version: 0.1.0</span>
+              <span class="meta-tag">Size: 167.6 MB</span>
+              <span class="meta-tag">Arch: x64</span>
+            </div>
+
+            <div class="dl-path-box">
+              <span class="path-label">Local File Location:</span>
+              <code class="path-code">D:\ggggggggggg\openatlas\desktop\dist\AtlasWorkspace 0.1.0.exe</code>
+            </div>
+
+            <a href="file:///D:/ggggggggggg/openatlas/desktop/dist/AtlasWorkspace%200.1.0.exe" class="btn-secondary w-full text-center">Download Portable Exe</a>
+          </div>
+
+          <!-- Download Card 3: Bun Backend Server Executable -->
+          <div class="download-card">
+            <div class="card-badge badge-neutral">BACKEND DAEMON BINARY</div>
+            <div class="download-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="4" width="16" height="16" rx="2"/>
+                <rect x="9" y="9" width="6" height="6"/>
+                <line x1="9" y1="1" x2="9" y2="4"/>
+                <line x1="15" y1="1" x2="15" y2="4"/>
+                <line x1="9" y1="20" x2="9" y2="23"/>
+                <line x1="15" y1="20" x2="15" y2="23"/>
+                <line x1="20" y1="9" x2="23" y2="9"/>
+                <line x1="20" y1="15" x2="23" y2="15"/>
+                <line x1="1" y1="9" x2="4" y2="9"/>
+                <line x1="1" y1="15" x2="4" y2="15"/>
+              </svg>
+            </div>
+            <h3 class="dl-title">Bun Standalone Backend</h3>
+            <p class="dl-subtitle">Single-file Bun server binary containing SQLite engine and PTY vendor tools.</p>
+            
+            <div class="dl-meta">
+              <span class="meta-tag">Version: 0.1.0</span>
+              <span class="meta-tag">Size: 340.5 MB</span>
+              <span class="meta-tag">Runtime: Bun</span>
+            </div>
+
+            <div class="dl-path-box">
+              <span class="path-label">Local File Location:</span>
+              <code class="path-code">D:\ggggggggggg\openatlas\workspace\atlas-workspace.exe</code>
+            </div>
+
+            <a href="file:///D:/ggggggggggg/openatlas/workspace/atlas-workspace.exe" class="btn-secondary w-full text-center">Download Backend Binary</a>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-left">
+        <span class="brand-title">OpenAtlas</span>
+        <span class="footer-copy">© 2026 OpenAtlas Project. Released under MIT License.</span>
+      </div>
+      <div class="footer-links">
+        <a href="#hero">Overview</a>
+        <a href="#simulator">Simulator</a>
+        <a href="#features">Architecture</a>
+        <a href="#download">Downloads</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

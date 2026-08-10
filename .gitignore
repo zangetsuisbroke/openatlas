@@ -1,0 +1,22 @@
+node_modules/
+dist/
+build/
+*.db
+*.db-wal
+*.db-shm
+.openatlas/
+.demo/
+.env
+.DS_Store
+Thumbs.db
+
+# generated build artifacts / large binaries
+*.exe
+dist-package/
+workspace/vendor/
+workspace/.atlas/
+workspace/logs/
+workspace/server.log
+workspace/.bun-build*
+desktop/*.log
+ChatGPT Image*.png

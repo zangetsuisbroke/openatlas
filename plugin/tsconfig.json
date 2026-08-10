@@ -1,0 +1,8 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "moduleResolution": "bundler",
+    "types": ["bun", "@opencode-ai/plugin"]
+  },
+  "include": ["src"]
+}

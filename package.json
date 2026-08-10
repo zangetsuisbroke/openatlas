@@ -1,0 +1,22 @@
+{
+  "name": "openatlas",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Git for reasoning - persistent memory for opencode agent sessions",
+  "workspaces": [
+    "engine",
+    "plugin",
+    "app/ui"
+  ],
+  "scripts": {
+    "test": "bun test",
+    "test:engine": "bun test engine/test",
+    "build:ui": "bun run --cwd app/ui build",
+    "start": "bun run build:ui && bun app/server.ts",
+    "dev": "bun --watch app/server.ts",
+    "package": "bun scripts/package.ts"
+  },
+  "engines": {
+    "bun": ">=1.1"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "atlas-workspace-desktop",
+  "version": "0.1.0",
+  "description": "Atlas Workspace — desktop shell",
+  "main": "main.js",
+  "author": "Atlas",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis portable"
+  },
+  "build": {
+    "appId": "com.atlas.workspace",
+    "productName": "AtlasWorkspace",
+    "asar": true,
+    "files": ["main.js", "package.json"],
+    "extraResources": [
+      { "from": "../workspace/atlas-workspace.exe", "to": "atlas-workspace.exe" }
+    ],
+    "win": {
+      "target": ["nsis", "portable"],
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "AtlasWorkspace",
+      "runAfterFinish": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  }
+}
