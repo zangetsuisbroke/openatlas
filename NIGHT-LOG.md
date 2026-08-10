@@ -31,6 +31,13 @@ Guardrails: no destructive ops; commit per-fix with clear messages; if stuck, co
   in the TermPane mount effect (`workspace/src/components/TerminalsPanel.tsx`) so a fresh
   terminal steals focus immediately. VERIFIED in a real browser: create → activeElement is
   `xterm-helper-textarea`, and `echo` round-trips through the new build's server (WS test PASS).
+- **[SCAN PERF] First-run workspace = home dir.** Desktop defaulted workspace to
+  `app.getPath("home")` on fresh installs → slow boot scan of the whole home tree + noisy
+  4000-file graph. Added a first-run "Choose workspace folder to scan" prompt in
+  `desktop/main.js` (uses the existing pickWorkspace dialog; only when no saved prefs).
+- **[SCAN PERF] Removed double-stat.** `server/scan.ts` stat'd every file twice per scan
+  (walk + mtime pass). Walk now records mtimes once; mtime/cached-refresh logic unchanged.
+  Scan still completes: 33 files, 5 folders, 41 imports ~2.5s on OpenAtlas workspace.
 
 ## Verification results (append)
 - Real-key CDP: 1 term:input per physical key (PASS, no duplication).

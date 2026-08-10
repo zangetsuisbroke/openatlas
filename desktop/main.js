@@ -291,6 +291,11 @@ if (!gotLock) {
     buildMenu();
     createWindow();
     try {
+      // First run: never default to scanning the entire home directory.
+      // Ask once for a real workspace folder before the server boots.
+      if (!prefs.workspace && !process.env.ATLAS_WORKSPACE) {
+        pickWorkspace();
+      }
       await startServer();
       ready = true;
       attach();

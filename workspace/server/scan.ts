@@ -39,7 +39,7 @@ function maybeYield(): Promise<void> {
   return Promise.resolve();
 }
 
-async function walk(root: string, rel: string, depth: number, acc: { files: string[]; folders: string[] }): Promise<void> {
+async function walk(root: string, rel: string, depth: number, acc: { files: string[]; folders: string[]; mtimes: Map<string, number> }): Promise<void> {
   if (depth > MAX_DEPTH || acc.files.length > MAX_FILES) return;
   let entries: string[];
   try {
@@ -62,6 +62,7 @@ async function walk(root: string, rel: string, depth: number, acc: { files: stri
       await walk(root, r, depth + 1, acc);
     } else if (st.isFile() && isCode(r) && !name.endsWith(".lock")) {
       acc.files.push(r);
+      acc.mtimes.set(r, st.mtimeMs);
     }
     await maybeYield();
   }
@@ -103,23 +104,15 @@ export async function scanNow(): Promise<ScanResult> {
   // ATLAS_WORKSPACE lets a desktop shell point the scan at a chosen folder
   // independent of the install/app-data dir.
   const root = process.env.ATLAS_WORKSPACE || appRoot();
-  const acc = { files: [] as string[], folders: [] as string[] };
+  const acc = { files: [] as string[], folders: [] as string[], mtimes: new Map<string, number>() };
   yielded = 0;
   await walk(root, "", 0, acc);
 
   const now = Date.now();
-  const mtimes = new Map<string, number>();
   const changed: string[] = [];
-  let i = 0;
   for (const f of acc.files) {
-    try {
-      const mt = statSync(join(root, f)).mtimeMs;
-      mtimes.set(f, mt);
-      if (mt !== lastMtimes.get(f)) changed.push(f);
-    } catch {
-      /* ignore */
-    }
-    if (++i % yieldEvery === 0) await new Promise((r) => setImmediate(r));
+    const mt = acc.mtimes.get(f);
+    if (mt !== undefined && mt !== lastMtimes.get(f)) changed.push(f);
   }
   // If nothing changed since last scan, reuse the cached result.
   if (lastResult && changed.length === 0 && acc.files.length === lastResult.files) {
@@ -183,6 +176,7 @@ export async function scanNow(): Promise<ScanResult> {
 
   // imports (only for changed files to stay cheap)
   let importCount = 0;
+  let i = 0;
   for (const f of changed.slice(0, 500)) {
     if (!/\.(ts|tsx|js|jsx|mjs)$/i.test(f)) continue;
     try {
@@ -202,7 +196,7 @@ export async function scanNow(): Promise<ScanResult> {
     if (++i % yieldEvery === 0) await new Promise((r) => setImmediate(r));
   }
 
-  lastMtimes = mtimes;
+  lastMtimes = acc.mtimes;
   lastScan = now;
   lastResult = {
     nodes,
