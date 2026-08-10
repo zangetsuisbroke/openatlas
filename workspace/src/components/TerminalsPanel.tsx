@@ -116,6 +116,7 @@ function TermPane({ id, title }: { id: string; title: string }) {
     }
 
     const disp = term.onData((data) => termInput(id, data));
+    term.focus();
 
     return () => {
       disp.dispose();
