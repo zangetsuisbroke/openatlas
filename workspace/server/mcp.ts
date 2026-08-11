@@ -213,14 +213,15 @@ interface RpcRequest {
   params?: any;
 }
 
-function rpcResult(id: number | string | undefined, result: unknown): unknown {
+function rpcResult(id: number | string | null | undefined, result: unknown): unknown {
   return { jsonrpc: "2.0", id, result };
 }
-function rpcError(id: number | string | undefined, code: number, message: string): unknown {
+function rpcError(id: number | string | null | undefined, code: number, message: string): unknown {
   return { jsonrpc: "2.0", id, error: { code, message } };
 }
 
 function handleMessage(msg: RpcRequest): unknown {
+  if (msg.id === undefined) return null; // notification — never respond
   switch (msg.method) {
     case "initialize":
       return rpcResult(msg.id, {
@@ -250,12 +251,20 @@ function handleMessage(msg: RpcRequest): unknown {
     case "tools/list_changed":
       return rpcResult(msg.id, {});
     default:
-      if (msg.id === undefined) return null; // notification — never respond
       return rpcError(msg.id, -32601, `method not found: ${msg.method}`);
   }
 }
 
 export async function handleMCP(req: Request): Promise<Response> {
+  if (req.method !== "POST") {
+    // Streamable HTTP only carries JSON-RPC requests over POST; a GET would only
+    // be used to open a server->client SSE stream, which this stateless server
+    // never does.
+    return new Response(null, {
+      status: 405,
+      headers: { Allow: "POST", "MCP-Protocol-Version": PROTOCOL_VERSION },
+    });
+  }
   const wantSse = (req.headers.get("accept") ?? "").includes("text/event-stream");
   let body: unknown = {};
   try {
@@ -272,7 +281,7 @@ export async function handleMCP(req: Request): Promise<Response> {
     const out: unknown[] = [];
     for (const m of body) {
       if (!m || typeof m !== "object") {
-        out.push(rpcError(undefined, -32600, "invalid batch item"));
+        out.push(rpcError(null, -32600, "invalid batch item"));
         continue;
       }
       try {
@@ -280,10 +289,14 @@ export async function handleMCP(req: Request): Promise<Response> {
         if (r !== null) out.push(r);
       } catch (e) {
         log.error("mcp", `batch item failed: ${String(e)}`);
-        out.push(rpcError((m as RpcRequest).id, -32603, `batch item failed: ${String(e)}`));
+        out.push(rpcError((m as RpcRequest).id ?? null, -32603, `batch item failed: ${String(e)}`));
       }
     }
-    return respond(out.length === 1 ? out[0] : out, wantSse, t0);
+    if (out.length === 0) {
+      // batch of only notifications — no response body (202 Accepted)
+      return new Response(null, { status: 202, headers: { "MCP-Protocol-Version": PROTOCOL_VERSION } });
+    }
+    return respond(out, wantSse, t0);
   }
   const msg = body as RpcRequest;
   const out = handleMessage(msg);

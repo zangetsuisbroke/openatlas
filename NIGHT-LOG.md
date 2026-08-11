@@ -79,3 +79,14 @@ Guardrails: no destructive ops; commit per-fix with clear messages; if stuck, co
 - Fix (commit 6a7aae2): stop embedding vendor blobs by default (ATLAS_EMBED_VENDOR=1 restores fat mode); desktop ships vendor as resources and passes ATLAS_NODE_PTY/ATLAS_OPENCODE_DIR to the server; server resolves node-pty via env -> on-disk -> embedded, opencode via opencodeDir().
 - Bug found+fixed while verifying: pty-host.mjs did await import(ATLAS_NODE_PTY) with a backslash Windows path -> dynamic import mangles escapes -> host crashed at boot (node-pty unavailable). Fixed by normalizing to file:// URL.
 - Result (lean exe, env pointing at workspace/vendor): server private 671MB -> 252MB (WS 42MB), embedded-assets.ts 231MB -> 947KB, exe 324.7MB -> 94.2MB. pty-stress 8/8 with host alive.
+
+## PTY worker-thread leak found + bounded (2026-08-12)
+- Symptom: stress 3 extra rounds doubled pty host memory (364 -> 743MB) — ~9MB leaked per force-killed terminal.
+- Root cause: node-pty 1.1.0 Windows ConPTY. Each pty spawns a conout worker thread blocked in a native pipe read. On force-kill the native ConPTY handle is never closed, the pipe never EOFs, so worker.terminate() hangs and the thread+isolate leak forever. Verified in isolation (driver -> host only): +75MB/round of 8 sessions, thread count 22 -> 65. JS-side socket-destroy patches did NOT help (native handle holds the pipe) — reverted.
+- Fix: pty-host.mjs memory guard — when idle (0 sessions) and RSS > 350MB, emit leak-restart and exit 0. shell.ts treats exit 0 as a graceful self-restart: does NOT count against the crash-loop cap (5) and respawns after 500ms with sessions cleaned. Verified: guard fires at ~596MB, exits 0, driver respawns cleanly.
+
+## MCP protocol audit + fixes (2026-08-12, sub-agent verified)
+- mcp.ts notifications (no id) were answered with JSON-RPC responses — now 202/no body (guard moved to top of handleMessage).
+- Batch framing: single-item batch now returns [array]; all-notification batch -> 202 no body; per-item errors carry id:null.
+- GET /api/mcp now 405 + Allow: POST + MCP-Protocol-Version (was 200 parse-error).
+- Verify agent: all 3 fixes confirmed correct end-to-end (live probes), typecheck clean, bun test baseline (54/2/2, pre-existing node-pty ps-list fails only), bundle clean. No new bugs.
