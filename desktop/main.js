@@ -119,6 +119,17 @@ async function startServer() {
     ATLAS_APP_DIR: join(app.getPath("userData"), "app"),
   };
 
+  // Point the server at the vendored binaries shipped as package resources (they are
+  // no longer embedded in the exe — embedding materialized ~300MB of base64 in its
+  // heap). Falls back to the repo's vendor/ in dev.
+  const vendorDir = app.isPackaged
+    ? join(process.resourcesPath, "vendor")
+    : join(__dirname, "..", "workspace", "vendor");
+  const nodePty = join(vendorDir, "node-pty", "lib", "index.js");
+  if (existsSync(nodePty)) env.ATLAS_NODE_PTY = nodePty;
+  const opencodeBin = join(vendorDir, "opencode", "bin");
+  if (existsSync(opencodeBin)) env.ATLAS_OPENCODE_DIR = opencodeBin;
+
   if (!exe) {
     // dev mode without compiled exe: run source via bun
     server = spawn("bun", ["server/index.ts"], {

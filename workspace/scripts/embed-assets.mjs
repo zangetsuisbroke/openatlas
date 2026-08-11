@@ -50,7 +50,17 @@ function embedNodePty() {
   };
   walkRel(ptyRoot, "");
 }
-embedNodePty();
+// By default the dist + pty host are embedded but the LARGE vendor binaries are not:
+// they ship as desktop resources (resources/vendor/...) and the server reads them via
+// ATLAS_NODE_PTY / ATLAS_OPENCODE_DIR. Setting ATLAS_EMBED_VENDOR=1 restores the old
+// fat single-file behavior for bare-dir use.
+const embedVendor = process.env.ATLAS_EMBED_VENDOR === "1";
+if (embedVendor) {
+  embedNodePty();
+  embedOpencode();
+} else {
+  console.log("vendor embed skipped (ATLAS_EMBED_VENDOR=1 to embed node-pty + opencode)");
+}
 
 // Embed the vendored opencode binary so the single exe works in a bare dir.
 function embedOpencode() {
@@ -62,7 +72,6 @@ function embedOpencode() {
   assets["__vendor/opencode/bin/" + exe.split(/[\\/]/).pop()] =
     `data:application/octet-stream;base64,${readFileSync(exe).toString("base64")}`;
 }
-embedOpencode();
 
 const keys = Object.keys(assets);
 if (!keys.length) {

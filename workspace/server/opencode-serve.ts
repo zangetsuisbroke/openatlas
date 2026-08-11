@@ -5,7 +5,7 @@ import { spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { appEnv, appRoot } from "./shell";
+import { appEnv, appRoot, opencodeDir } from "./shell";
 import { log } from "./log";
 
 export interface OpenCodeServeStatus {
@@ -26,8 +26,13 @@ let stopping = false;
 let startPromise: Promise<OpenCodeServeStatus> | null = null;
 
 function bin(): string {
-  const root = appRoot();
   const name = process.platform === "win32" ? "opencode.exe" : "opencode";
+  const fromEnv = opencodeDir();
+  if (fromEnv) {
+    const p = join(fromEnv, name);
+    if (existsSync(p)) return p;
+  }
+  const root = appRoot();
   const candidates = [join(root, "vendor", "opencode", "bin", name), join(root, "vendor", "opencode", "bin", "opencode")];
   return candidates.find((p) => existsSync(p)) ?? "";
 }

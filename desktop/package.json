@@ -15,7 +15,9 @@
     "asar": true,
     "files": ["main.js", "package.json"],
     "extraResources": [
-      { "from": "../workspace/atlas-workspace.exe", "to": "atlas-workspace.exe" }
+      { "from": "../workspace/atlas-workspace.exe", "to": "atlas-workspace.exe" },
+      { "from": "../workspace/vendor/node-pty", "to": "vendor/node-pty" },
+      { "from": "../workspace/vendor/opencode", "to": "vendor/opencode" }
     ],
     "win": {
       "target": ["nsis", "portable"],

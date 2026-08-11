@@ -42,50 +42,59 @@ function extractEmbedded(embedded: Record<string, string>, prefix: string, destR
   return any;
 }
 
-// Resolve the PTY host script and runtime node-pty: dev (server/ + vendor/), or extracted
-// from embedded assets in exe mode (single-file distribution in a bare directory).
+// Resolve the PTY host script and runtime node-pty: env resource (desktop), dev
+// (server/ + vendor/), or extracted from embedded assets in fat-exe mode.
 const { HOST_SCRIPT, NODE_PTY_INDEX } = (() => {
+  let host = "";
   let p = join(APP_DIR, "server", "pty-host.mjs");
   if (existsSync(p)) {
     log.info("pty", `host script: ${p}`);
-    return { HOST_SCRIPT: p, NODE_PTY_INDEX: nodePtyPath() };
-  }
-  if (!IS_COMPILED) {
+    host = p;
+  } else if (!IS_COMPILED) {
     p = join(import.meta.dir, "pty-host.mjs");
-    if (existsSync(p)) return { HOST_SCRIPT: p, NODE_PTY_INDEX: nodePtyPath() };
+    if (existsSync(p)) host = p;
   }
+
   const embedded = EMBEDDED_ASSETS;
-  if (!embedded || !Object.keys(embedded).length) {
-    log.error("pty", "no embedded assets — PTY host unavailable");
-    return { HOST_SCRIPT: "", NODE_PTY_INDEX: nodePtyPath() };
-  }
   const iso = join(APP_DIR, ".atlas");
-  mkdirSync(iso, { recursive: true });
-  let host = "";
-  const rawHost = embedded["__internal/pty-host.mjs"];
-  if (rawHost) {
+  if (!host && embedded && embedded["__internal/pty-host.mjs"]) {
+    mkdirSync(iso, { recursive: true });
     const out = join(iso, "pty-host.mjs");
     if (!existsSync(out)) {
-      const body = rawHost.startsWith("data:") ? Buffer.from(rawHost.split(",")[1], "base64") : Buffer.from(rawHost);
-      writeFileSync(out, body);
+      const raw = embedded["__internal/pty-host.mjs"];
+      writeFileSync(out, raw.startsWith("data:") ? Buffer.from(raw.split(",")[1], "base64") : Buffer.from(raw));
       log.info("pty", `extracted pty-host.mjs -> ${out}`);
     }
     host = out;
   }
-  let pty = "";
-  if (embedded["__vendor/node-pty/lib/index.js"] && !existsSync(join(APP_DIR, "vendor", "node-pty"))) {
+
+  // node-pty: desktop resource -> next to app -> embedded (in that order). Using the
+  // resource copy avoids materializing a 60MB+ base64 string table in this heap.
+  let pty = process.env.ATLAS_NODE_PTY && existsSync(process.env.ATLAS_NODE_PTY) ? process.env.ATLAS_NODE_PTY : "";
+  if (!pty) pty = nodePtyPath();
+  if (!pty && embedded && embedded["__vendor/node-pty/lib/index.js"] && !existsSync(join(APP_DIR, "vendor", "node-pty"))) {
+    mkdirSync(iso, { recursive: true });
     const ptyDest = join(iso, "vendor", "node-pty");
     if (extractEmbedded(embedded, "__vendor/node-pty/", ptyDest)) {
       pty = join(ptyDest, "lib", "index.js");
       log.info("pty", `extracted node-pty -> ${ptyDest}`);
     }
   }
-  if (embedded["__vendor/opencode/bin/opencode.exe"] && !existsSync(join(APP_DIR, "vendor", "opencode", "bin", "opencode.exe"))) {
+  if (embedded && embedded["__vendor/opencode/bin/opencode.exe"] && !existsSync(join(APP_DIR, "vendor", "opencode", "bin", "opencode.exe"))) {
+    mkdirSync(iso, { recursive: true });
     if (extractEmbedded(embedded, "__vendor/opencode/bin/", join(APP_DIR, "vendor", "opencode", "bin"))) {
       log.info("pty", "extracted vendored opencode binary");
     }
   }
-  return { HOST_SCRIPT: host, NODE_PTY_INDEX: pty || nodePtyPath() };
+  // The embedded vendor/internal blobs (opencode.exe alone is ~170MB) are base64
+  // strings living in this module's heap. Everything they decode to is now on disk,
+  // so drop the references and let the GC reclaim that private memory. The small
+  // dist/ keys stay for static serving.
+  for (const k of Object.keys(embedded)) {
+    if (k.startsWith("__vendor/") || k.startsWith("__internal/")) delete embedded[k];
+  }
+  if (!host) log.error("pty", "no pty-host.mjs source — PTY host unavailable");
+  return { HOST_SCRIPT: host, NODE_PTY_INDEX: pty };
 })();
 
 function nodePtyPath(): string {
@@ -93,12 +102,20 @@ function nodePtyPath(): string {
   return existsSync(local) ? local : "";
 }
 
+// Directory containing the opencode binary, or "" if none is available.
+export function opencodeDir(): string {
+  const env = process.env.ATLAS_OPENCODE_DIR;
+  if (env && existsSync(env)) return env;
+  const local = join(APP_DIR, "vendor", "opencode", "bin");
+  return existsSync(local) ? local : "";
+}
+
 // ---------- environment for app-owned terminals ----------
 export function appEnv(): Record<string, string> {
   const env: Record<string, string> = { ...process.env };
   const prepend: string[] = [];
-  const opencodeBin = join(APP_DIR, "vendor", "opencode", "bin");
-  if (existsSync(opencodeBin)) prepend.push(opencodeBin);
+  const opencodeBin = opencodeDir();
+  if (opencodeBin) prepend.push(opencodeBin);
   if (prepend.length) env.PATH = prepend.join(";") + ";" + (env.PATH ?? "");
   const isolated = join(APP_DIR, ".atlas");
   env.XDG_CONFIG_HOME = join(isolated, "opencode-config");

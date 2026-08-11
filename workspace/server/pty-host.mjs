@@ -14,8 +14,11 @@ process.on("unhandledRejection", (e) => {
   console.error("[host] unhandledRejection:", String(e));
 });
 
+// Windows paths in env vars use backslashes, which Node's dynamic import() mangles
+// (treats them as JS escapes). Normalize to a file:// URL so it always resolves.
+const envPty = process.env.ATLAS_NODE_PTY;
 const candidates = [
-  process.env.ATLAS_NODE_PTY,
+  envPty ? "file:///" + envPty.replace(/\\/g, "/") : "",
   "node-pty",
   new URL("../node_modules/node-pty/lib/index.js", import.meta.url).pathname,
   new URL("../vendor/node-pty/lib/index.js", import.meta.url).pathname,
