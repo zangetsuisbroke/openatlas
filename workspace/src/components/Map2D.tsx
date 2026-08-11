@@ -54,6 +54,9 @@ const PULSE_MS = 900;
 const TYPE_CLUSTERS: Record<string, { x: number; y: number }> = {
   agent: { x: 0, y: 0 },
   file: { x: -180, y: -120 },
+  folder: { x: -260, y: -40 },
+  branch: { x: 200, y: 200 },
+  package: { x: 260, y: -40 },
   concept: { x: 0, y: -180 },
   decision: { x: 180, y: -120 },
   task: { x: 200, y: 30 },
@@ -296,7 +299,8 @@ const Map2D = forwardRef<Map2DHandle, Props>(function Map2D({ nodes, links, puls
             break;
           }
         }
-        if (hoverRef.current || pressRef.current) busy = true;
+        // hover rendering is static (constant shadow) — one redraw on pointermove is enough
+        if (pressRef.current) busy = true;
         draw();
         if (busy) raf = requestAnimationFrame(loop);
         else rafRunning = false;

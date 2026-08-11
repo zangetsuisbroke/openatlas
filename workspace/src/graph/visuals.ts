@@ -11,6 +11,9 @@ export type ShapeKind =
 
 export const NODE_STYLE: Record<NodeType, { color: string; shape: ShapeKind }> = {
   file: { color: "#6f9df1", shape: "square" },
+  folder: { color: "#8b929d", shape: "square" },
+  branch: { color: "#d9b268", shape: "pill" },
+  package: { color: "#8adfd7", shape: "hex" },
   concept: { color: "#6cc8e0", shape: "circle" },
   decision: { color: "#a892e0", shape: "diamond" },
   agent: { color: "#59dda6", shape: "hex" },
@@ -29,9 +32,11 @@ export const LINK_STYLE: Record<Relation, string> = {
   edits: "#6f9df1",
   observes: "#4d5560",
   depends: "#d9b268",
+  contains: "#4d5560",
+  imports: "#6f9df1",
 };
 
-export const TYPE_ORDER: NodeType[] = ["file", "concept", "decision", "agent", "task", "tool", "memory", "error", "event"];
+export const TYPE_ORDER: NodeType[] = ["file", "folder", "branch", "package", "concept", "decision", "agent", "task", "tool", "memory", "error", "event"];
 
 export function nodeColor(type: NodeType): string {
   return NODE_STYLE[type]?.color ?? "#8b929d";

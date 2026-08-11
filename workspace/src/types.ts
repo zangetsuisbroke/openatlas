@@ -1,5 +1,8 @@
 export type NodeType =
   | "file"
+  | "folder"
+  | "branch"
+  | "package"
   | "concept"
   | "decision"
   | "agent"
@@ -16,7 +19,9 @@ export type Relation =
   | "activates"
   | "edits"
   | "observes"
-  | "depends";
+  | "depends"
+  | "contains"
+  | "imports";
 
 export interface GNode {
   id: string;
@@ -52,8 +57,9 @@ export interface StreamEvent {
 export type ServerMsg =
   | { type: "hello"; data: { nodes: GNode[]; links: GLink[] } }
   | { type: "event"; data: StreamEvent }
-  | { type: "graph"; data: { nodes: GNode[]; links: GLink[] } }
+  | { type: "graph"; data: { nodes: GNode[]; links: GLink[]; replace?: boolean } }
   | { type: "pulse"; data: { nodeId: string; at: number } }
+  | { type: "pong" }
   | { type: "term:create"; data: { id: string; shell: string; title: string } }
   | { type: "term:exit"; data: { id: string } }
   | { type: "term:data"; data: { id: string; data: string } };

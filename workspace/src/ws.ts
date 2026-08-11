@@ -2,6 +2,14 @@ import type { ClientMsg, GLink, GNode, ServerMsg, StreamEvent } from "./types";
 
 type TermHandler = (id: string, data: string) => void;
 
+let clockOffset: number | null = null;
+// Convert a server clock timestamp (Date.now epoch ms) into the page's
+// performance.now() domain so the canvas can compare pulse ages directly.
+function toPerfClock(serverMs: number): number {
+  if (clockOffset === null) clockOffset = Date.now() - performance.now();
+  return serverMs - clockOffset;
+}
+
 interface TermSessionInfo {
   id: string;
   shell: string;
@@ -56,7 +64,14 @@ class Store {
       this.nodes = new Map();
       this.links = new Map();
     }
-    for (const n of nodes) this.nodes.set(n.id, n);
+    for (const n of nodes) {
+      // a node without a label is a tombstone — delete it
+      if (!n.label || !n.type) {
+        this.nodes.delete(n.id);
+        continue;
+      }
+      this.nodes.set(n.id, n);
+    }
     for (const l of links) this.links.set(linkKey(l), l);
     this.graphVersion++;
     this.emit();
@@ -73,7 +88,9 @@ class Store {
       const cutoff = Date.now() - 30000;
       for (const [id, t] of this.pulses) if (t < cutoff) this.pulses.delete(id);
     }
-    this.pulses.set(nodeId, at);
+    // server timestamps use Date.now(); the canvas compares against
+    // performance.now(), so convert into the perf clock domain.
+    this.pulses.set(nodeId, toPerfClock(at));
     this.pulsesVersion++;
     this.emit();
   }
@@ -92,7 +109,7 @@ class Store {
 
   syncSessions() {
     this.sessions = [];
-    for (const id of [...this.termBuf.keys()]) this.termBuf.delete(id);
+    // keep termBuf across reconnects so terminal scrollback survives a drop
     this.emit();
   }
 
@@ -122,7 +139,9 @@ export function send(msg: ClientMsg) {
 
 function handle(msg: ServerMsg) {
   switch (msg.type) {
-        case "hello":
+    case "pong":
+      return;
+    case "hello":
       store.connected = true;
       store.applyGraph(msg.data.nodes, msg.data.links, true);
       store.syncSessions();
@@ -130,7 +149,7 @@ function handle(msg: ServerMsg) {
       store.pushEvent(msg.data);
       break;
     case "graph":
-      store.applyGraph(msg.data.nodes, msg.data.links);
+      store.applyGraph(msg.data.nodes, msg.data.links, msg.data.replace);
       break;
     case "pulse":
       store.pulse(msg.data.nodeId, msg.data.at);
@@ -153,7 +172,10 @@ function handle(msg: ServerMsg) {
 let retryTimer: ReturnType<typeof setTimeout> | null = null;
 let retryMs = 500;
 let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+let watchdogTimer: ReturnType<typeof setInterval> | null = null;
+let lastPong = 0;
 const PULSE_MS = 25000;
+const PONG_TIMEOUT_MS = 75000;
 
 export function connect() {
   if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) return;
@@ -162,14 +184,26 @@ export function connect() {
   ws.onopen = () => {
     store.connected = true;
     retryMs = 500;
+    lastPong = Date.now();
     store.emit();
     while (outbox.length) ws?.send(JSON.stringify(outbox.shift()));
     if (heartbeatTimer) clearInterval(heartbeatTimer);
     heartbeatTimer = setInterval(() => {
       send({ type: "ping" });
     }, PULSE_MS);
+    if (watchdogTimer) clearInterval(watchdogTimer);
+    watchdogTimer = setInterval(() => {
+      if (Date.now() - lastPong > PONG_TIMEOUT_MS) {
+        try {
+          ws?.close();
+        } catch {
+          /* already closing */
+        }
+      }
+    }, 10000);
   };
   ws.onmessage = (ev) => {
+    lastPong = Date.now();
     try {
       handle(JSON.parse(ev.data) as ServerMsg);
     } catch {
@@ -180,6 +214,7 @@ export function connect() {
     store.connected = false;
     store.emit();
     if (heartbeatTimer) clearInterval(heartbeatTimer);
+    if (watchdogTimer) clearInterval(watchdogTimer);
     if (retryTimer) clearTimeout(retryTimer);
     retryTimer = setTimeout(connect, retryMs);
     retryMs = Math.min(retryMs * 2, 15000) + Math.random() * 1000;
