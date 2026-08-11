@@ -261,12 +261,28 @@ export async function handleMCP(req: Request): Promise<Response> {
   try {
     body = await req.json();
   } catch {
-    return rpc(httpError(-32700, "parse error"), wantSse);
+    return respond(httpError(-32700, "parse error"), wantSse, performance.now());
   }
   const t0 = performance.now();
+  if (!body || typeof body !== "object") {
+    return respond(httpError(-32600, "invalid request"), wantSse, t0);
+  }
   if (Array.isArray(body)) {
-    // batch — process each
-    const out = body.map((m) => handleMessage(m as RpcRequest)).filter((x) => x !== null);
+    // batch — process each independently so one bad item can't kill the whole batch
+    const out: unknown[] = [];
+    for (const m of body) {
+      if (!m || typeof m !== "object") {
+        out.push(rpcError(undefined, -32600, "invalid batch item"));
+        continue;
+      }
+      try {
+        const r = handleMessage(m as RpcRequest);
+        if (r !== null) out.push(r);
+      } catch (e) {
+        log.error("mcp", `batch item failed: ${String(e)}`);
+        out.push(rpcError((m as RpcRequest).id, -32603, `batch item failed: ${String(e)}`));
+      }
+    }
     return respond(out.length === 1 ? out[0] : out, wantSse, t0);
   }
   const msg = body as RpcRequest;

@@ -431,10 +431,19 @@ function cacheControlFor(path: string) {
 }
 
 async function serveStatic(pathname: string): Promise<Response> {
-  let p = decodeURIComponent(pathname);
+  let p: string;
+  try {
+    p = decodeURIComponent(pathname);
+  } catch {
+    return new Response("bad request", { status: 400 });
+  }
   if (p.endsWith("/")) p += "index.html";
   if (p === "") p = "/index.html";
   const rel = p.replace(/^\/+/, "");
+  const relParts = rel.split("/");
+  if (relParts.some((seg) => seg === ".." || seg === "." || seg.includes("\\") || seg.includes(":"))) {
+    return new Response("not found", { status: 404 });
+  }
   const ext = rel.slice(rel.lastIndexOf(".")).toLowerCase();
   const type = MIME[ext] ?? "application/octet-stream";
 
@@ -452,7 +461,7 @@ async function serveStatic(pathname: string): Promise<Response> {
     }
   }
 
-  if (EMBEDDED && rel in EMBEDDED) {
+  if (EMBEDDED && Object.hasOwn(EMBEDDED, rel)) {
     const raw = EMBEDDED[rel];
     const body = raw.startsWith("data:") ? Buffer.from(raw.split(",")[1], "base64") : new TextEncoder().encode(raw);
     cached.set(rel, { body, type });
@@ -472,6 +481,7 @@ async function serveStatic(pathname: string): Promise<Response> {
 // ---------- server ----------
 const server = Bun.serve<{ clientId: string }>({
   port: PORT,
+  hostname: process.env.ATLAS_HOST || "127.0.0.1",
   websocket: {
     open(ws) {
       clients.add(ws);
@@ -491,6 +501,7 @@ const server = Bun.serve<{ clientId: string }>({
       }
       switch (msg.type) {
         case "ping":
+          ws.send(JSON.stringify({ type: "pong" } satisfies ServerMsg));
           break;
         case "term:input":
           termManager.write(msg.id, msg.data);
@@ -573,36 +584,42 @@ const server = Bun.serve<{ clientId: string }>({
 
 // ---------- workspace scan -> graph merge ----------
 function mergeScanNodes(nodes: GNode[], links: GLink[]) {
-  const now = Date.now();
+  const addedNodes: GNode[] = [];
+  const addedLinks: GLink[] = [];
   for (const n of nodes) {
     if (!graph.nodes.has(n.id)) {
       graph.upsertNode(n);
-      broadcast({ type: "graph", data: { nodes: [n], links: [] } });
+      addedNodes.push(n);
     }
   }
   for (const l of links) {
     const key = `${l.source}→${l.target}:${l.relation}`;
     if (!graph.links.has(key)) {
       graph.links.set(key, l);
-      broadcast({ type: "graph", data: { nodes: [], links: [l] } });
+      addedLinks.push(l);
     }
   }
-  // prune scan-owned nodes/links that no longer exist (files deleted, dirs removed)
+  // prune scan-owned nodes that no longer exist (files deleted, dirs removed)
   const scanIds = new Set(nodes.map((n) => n.id));
-  const scanLinkKeys = new Set(links.map((l) => `${l.source}→${l.target}:${l.relation}`));
+  const removed = new Set<string>();
   for (const nid of [...graph.nodes.keys()]) {
     if (!nid.startsWith("w:")) continue;
     if (!scanIds.has(nid)) {
       graph.nodes.delete(nid);
-      broadcast({ type: "graph", data: { nodes: [{ id: nid } as GNode], links: [] } });
+      removed.add(nid);
     }
   }
-  for (const key of [...graph.links.keys()]) {
-    if (!key.startsWith("w:") || scanLinkKeys.has(key)) continue;
-    if (!graph.links.get(key)?.source.startsWith("w:")) continue;
-    graph.links.delete(key);
+  // drop links that touched a removed node; keep every other scan link (e.g. imports
+  // between still-existing files) even if this scan pass did not recompute it.
+  for (const [key, l] of [...graph.links.entries()]) {
+    if (removed.has(String(l.source)) || removed.has(String(l.target))) {
+      graph.links.delete(key);
+    }
   }
-  void now;
+  if (removed.size || addedNodes.length || addedLinks.length) {
+    // one full snapshot keeps the client reconciled (nodes + links, incl. deletions)
+    broadcast({ type: "graph", data: { ...graph.snap(), replace: true } });
+  }
 }
 let scanning = false;
 async function refreshScan() {

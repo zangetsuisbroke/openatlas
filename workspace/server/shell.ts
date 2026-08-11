@@ -265,9 +265,19 @@ export class PtyHost {
 
   close(): void {
     try {
-      this.proc?.kill();
+      if (this.proc?.pid && process.platform === "win32") {
+        // kill the whole tree so node-pty's child shells don't get orphaned
+        const { execSync } = require("node:child_process") as typeof import("node:child_process");
+        execSync(`taskkill /F /T /PID ${this.proc.pid}`, { stdio: "ignore" });
+      } else {
+        this.proc?.kill();
+      }
     } catch {
-      /* dead */
+      try {
+        this.proc?.kill();
+      } catch {
+        /* dead */
+      }
     }
   }
 }
@@ -625,6 +635,10 @@ export class TerminalManager {
     };
     host.exited.then(() => {
       if (this.closing || this.host !== host) return;
+      if (this.respawnAttempts >= 5) {
+        log.error("pty", `host died ${this.respawnAttempts} times — giving up on respawn`);
+        return;
+      }
       console.error("[shell] pty host died — closing pty sessions, respawning");
       log.error("pty", `host died — closing pty sessions, respawning (attempt ${this.respawnAttempts + 1})`);
       for (const [id, t] of [...this.sessions.entries()]) {
