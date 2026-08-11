@@ -44,3 +44,32 @@ Guardrails: no destructive ops; commit per-fix with clear messages; if stuck, co
 - Auto-focus: terminal focused on create without clicking (PASS).
 - WS echo on new build: `echo WS_ECHO_OK` → shell echoes `WS_ECHO_OK` (PASS).
 - xterm 5.5.0 vs 6.0.0 both double under synthetic keypress; not the bug; no upgrade needed.
+
+## Build + fresh-extraction verify (packaged portable, FOCUS FIX included)
+- Rebuilt server exe (`npm run exe`) and desktop portable (`npm run dist`) with the
+  term.focus() fix + new bundle. Build chain now proven reproducible. (2 transient
+  electron-builder failures were file-lock + orphaned builder children — killed orphans,
+  rebuilt clean. Portable rebuilt 02:50.)
+- Fresh-extraction verify on the SHIPPED portable (CDP 9333, workspace=OpenAtlas):
+  * server extracted + host node.exe spawned and STAYED alive;
+  * root returns 200 on the packaged server port;
+  * `pty-stress.mjs <port> 8` × 3 rounds → **8/8 completed, 8/8 exited cleanly each round**;
+  * host node.exe still alive after all rounds.
+- **Auto-focus verified in shipped build**: create terminal → activeElement is
+  `xterm-helper-textarea` immediately (no click).
+- **Real-OS-keystroke ground truth (SendKeys → real key events, not CDP)**:
+  typed `HELLO123` into a fresh terminal → WS spy saw the shell echo `HELLO123` exactly
+  ONCE and the cmd error line once → **no doubling for real users**.
+- The 2× seen earlier via CDP `Input.dispatchKeyEvent` WITH `text` is a Chromium
+  injection artifact (synthetic text commit hits both xterm beforeinput + input paths).
+  Confirmed again empirically on the new build; real keyboard path is 1:1. No frontend
+  change warranted (agenda 1c: N/A — duplication is not real).
+- [MCP] Fixed `workspace/server/mcp.ts`:
+  * negative `limit` could pass through `Math.min(...)` and make `.slice(0, negative)`
+    silently drop results → clamped `Math.max(1, …)`;
+  * unknown methods with no `id` (notifications like `notifications/progress`) got a
+    response, violating JSON-RPC → now return null (no body) when `msg.id === undefined`.
+    `refresh()` in snapshot tool is safe (guarded by `stale()` + `scanning` flag).
+  Committed `44559bc`.
+- NOTE: `atlas-workspace.exe` (packaged Bun server) observed at ~750MB RSS — flag for the
+  compute-monitor pass.
