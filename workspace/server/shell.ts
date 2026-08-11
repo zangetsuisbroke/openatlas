@@ -650,14 +650,22 @@ export class TerminalManager {
     host.onReady = () => {
       this.respawnAttempts = 0;
     };
-    host.exited.then(() => {
+    host.exited.then((code) => {
       if (this.closing || this.host !== host) return;
-      if (this.respawnAttempts >= 5) {
+      // A graceful exit (code 0) is a deliberate self-restart (e.g. the memory
+      // guard in pty-host.mjs bounding a node-pty worker leak) — it is expected
+      // and must NOT count toward the crash-loop cap. Non-zero = crash: cap it.
+      const graceful = code === 0;
+      if (!graceful && this.respawnAttempts >= 5) {
         log.error("pty", `host died ${this.respawnAttempts} times — giving up on respawn`);
         return;
       }
-      console.error("[shell] pty host died — closing pty sessions, respawning");
-      log.error("pty", `host died — closing pty sessions, respawning (attempt ${this.respawnAttempts + 1})`);
+      if (graceful) {
+        log.warn("pty", `host self-restarted (exit 0) — respawning fresh host`);
+      } else {
+        console.error("[shell] pty host died — closing pty sessions, respawning");
+        log.error("pty", `host died — closing pty sessions, respawning (attempt ${this.respawnAttempts + 1})`);
+      }
       for (const [id, t] of [...this.sessions.entries()]) {
         if (t instanceof PtySession) {
           this.sessions.delete(id);
@@ -665,8 +673,8 @@ export class TerminalManager {
           this.cb.onExit(id);
         }
       }
-      const delay = Math.min(2000 * 2 ** this.respawnAttempts, 10000);
-      this.respawnAttempts++;
+      const delay = graceful ? 500 : Math.min(2000 * 2 ** this.respawnAttempts, 10000);
+      if (!graceful) this.respawnAttempts++;
       if (this.respawnTimer) clearTimeout(this.respawnTimer);
       this.respawnTimer = setTimeout(() => {
         if (this.closing || this.host !== host) return;

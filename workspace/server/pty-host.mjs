@@ -123,4 +123,17 @@ rl.on("line", (line) => {
 // never silently exits with code 0 and the server can respawn/recover.
 setInterval(() => {}, 60_000);
 
+// Memory guard. node-pty leaks a worker thread + isolate (~9MB) per force-killed
+// session on Windows (the ConPTY pipe never closes, so the conout worker blocks in
+// a native read and worker.terminate() hangs). It cannot be fixed in JS, so we
+// bound it: when idle and over the cap, exit 0 so the server respawns a fresh
+// host. Only fires with ZERO open sessions, so active terminals are never dropped.
+const MEM_CAP = 350 * 1024 * 1024;
+setInterval(() => {
+  if (sessions.size === 0 && process.memoryUsage().rss > MEM_CAP) {
+    emit({ type: "leak-restart", rssMB: Math.round(process.memoryUsage().rss / 1048576) });
+    setTimeout(() => process.exit(0), 50);
+  }
+}, 15000);
+
 emit({ type: "ready" });
