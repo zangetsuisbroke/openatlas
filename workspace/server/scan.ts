@@ -19,6 +19,7 @@ interface ScanResult {
   files: number;
   folders: number;
   ms: number;
+  rescanFiles: string[];
 }
 
 let lastScan = 0;
@@ -117,6 +118,7 @@ export async function scanNow(): Promise<ScanResult> {
   // If nothing changed since last scan, reuse the cached result.
   if (lastResult && changed.length === 0 && acc.files.length === lastResult.files) {
     lastScan = now;
+    lastResult.rescanFiles = [];
     return lastResult;
   }
 
@@ -177,8 +179,10 @@ export async function scanNow(): Promise<ScanResult> {
   // imports (only for changed files to stay cheap)
   let importCount = 0;
   let i = 0;
+  const rescanFiles: string[] = [];
   for (const f of changed.slice(0, 500)) {
     if (!/\.(ts|tsx|js|jsx|mjs)$/i.test(f)) continue;
+    rescanFiles.push(f);
     try {
       const size = statSync(join(root, f)).size;
       if (size > 1_000_000) continue; // skip huge generated/bundle files
@@ -204,6 +208,7 @@ export async function scanNow(): Promise<ScanResult> {
     files: acc.files.length,
     folders: acc.folders.length,
     ms: performance.now() - t0,
+    rescanFiles,
   };
   log.info("scan", `scan complete: ${acc.files.length} files, ${acc.folders.length} folders, ${importCount} imports in ${lastResult.ms.toFixed(0)}ms`);
   return lastResult;

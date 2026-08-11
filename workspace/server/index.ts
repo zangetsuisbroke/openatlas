@@ -583,13 +583,25 @@ const server = Bun.serve<{ clientId: string }>({
 });
 
 // ---------- workspace scan -> graph merge ----------
-function mergeScanNodes(nodes: GNode[], links: GLink[]) {
+function mergeScanNodes(nodes: GNode[], links: GLink[], rescanFiles: string[] = []) {
   const addedNodes: GNode[] = [];
   const addedLinks: GLink[] = [];
+  const prevNodes = new Set(graph.nodes.keys());
+  const prevLinks = new Set(graph.links.keys());
   for (const n of nodes) {
     if (!graph.nodes.has(n.id)) {
       graph.upsertNode(n);
       addedNodes.push(n);
+    }
+  }
+  // Reconcile import links for files whose imports were just recomputed: any old
+  // imports link the fresh scan no longer emits is stale (the import was removed).
+  const rescanIds = new Set(rescanFiles.map((f) => `w:${f.split(/[\\/]/).join("/")}`));
+  if (rescanIds.size) {
+    for (const [key, l] of [...graph.links.entries()]) {
+      if (l.relation === "imports" && rescanIds.has(String(l.source))) {
+        graph.links.delete(key);
+      }
     }
   }
   for (const l of links) {
@@ -599,11 +611,12 @@ function mergeScanNodes(nodes: GNode[], links: GLink[]) {
       addedLinks.push(l);
     }
   }
-  // prune scan-owned nodes that no longer exist (files deleted, dirs removed)
+  // prune scan-owned nodes that no longer exist (files deleted, dirs removed,
+  // deps dropped from package.json, branch changed/removed)
   const scanIds = new Set(nodes.map((n) => n.id));
   const removed = new Set<string>();
   for (const nid of [...graph.nodes.keys()]) {
-    if (!nid.startsWith("w:")) continue;
+    if (!nid.startsWith("w:") && !nid.startsWith("dep:") && !nid.startsWith("git:")) continue;
     if (!scanIds.has(nid)) {
       graph.nodes.delete(nid);
       removed.add(nid);
@@ -616,7 +629,9 @@ function mergeScanNodes(nodes: GNode[], links: GLink[]) {
       graph.links.delete(key);
     }
   }
-  if (removed.size || addedNodes.length || addedLinks.length) {
+  const removedNodes = [...prevNodes].filter((k) => !graph.nodes.has(k));
+  const removedLinks = [...prevLinks].filter((k) => !graph.links.has(k));
+  if (removedNodes.length || removedLinks.length || addedNodes.length || addedLinks.length) {
     // one full snapshot keeps the client reconciled (nodes + links, incl. deletions)
     broadcast({ type: "graph", data: { ...graph.snap(), replace: true } });
   }
@@ -628,7 +643,7 @@ async function refreshScan() {
   const t = log.time("scan", "refresh");
   try {
     const r = await scanNow();
-    if (r) mergeScanNodes(r.nodes, r.links);
+    if (r) mergeScanNodes(r.nodes, r.links, r.rescanFiles);
   } finally {
     scanning = false;
     t();

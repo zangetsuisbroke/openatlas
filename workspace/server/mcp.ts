@@ -221,9 +221,16 @@ function rpcError(id: number | string | null | undefined, code: number, message:
 }
 
 function handleMessage(msg: RpcRequest): unknown {
-  if (msg.id === undefined) return null; // notification — never respond
+  const isNotif = msg.id === undefined;
+  if (typeof msg.method !== "string" || msg.method.length === 0) {
+    return rpcError(isNotif ? null : msg.id, -32600, "invalid request");
+  }
+  if (isNotif) return null; // notification — never respond
   switch (msg.method) {
     case "initialize":
+      if (msg.params != null && (typeof msg.params !== "object" || Array.isArray(msg.params))) {
+        return rpcError(msg.id, -32602, "invalid params");
+      }
       return rpcResult(msg.id, {
         protocolVersion: PROTOCOL_VERSION,
         capabilities: { tools: { listChanged: false } },
@@ -238,8 +245,12 @@ function handleMessage(msg: RpcRequest): unknown {
     case "tools/list":
       return rpcResult(msg.id, { tools: toolList() });
     case "tools/call": {
-      const { name, arguments: args } = msg.params ?? {};
-      const fn = TOOLS[name as string];
+      const p = msg.params;
+      if (!p || typeof p !== "object" || Array.isArray(p)) return rpcError(msg.id, -32602, "invalid params");
+      const { name, arguments: args } = p as { name?: unknown; arguments?: unknown };
+      if (typeof name !== "string" || name.length === 0) return rpcError(msg.id, -32602, "invalid params: missing tool name");
+      if (args != null && (typeof args !== "object" || Array.isArray(args))) return rpcError(msg.id, -32602, "invalid params: arguments must be an object");
+      const fn = Object.hasOwn(TOOLS, name) ? TOOLS[name] : undefined;
       if (!fn) return rpcError(msg.id, -32601, `unknown tool: ${name}`);
       try {
         return rpcResult(msg.id, fn((args as Record<string, unknown>) ?? {}));
@@ -277,6 +288,10 @@ export async function handleMCP(req: Request): Promise<Response> {
     return respond(httpError(-32600, "invalid request"), wantSse, t0);
   }
   if (Array.isArray(body)) {
+    if (body.length === 0) {
+      // an empty batch is an Invalid Request per JSON-RPC 2.0 — single error response
+      return respond(httpError(-32600, "invalid request"), wantSse, t0);
+    }
     // batch — process each independently so one bad item can't kill the whole batch
     const out: unknown[] = [];
     for (const m of body) {
