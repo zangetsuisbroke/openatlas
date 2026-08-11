@@ -73,3 +73,9 @@ Guardrails: no destructive ops; commit per-fix with clear messages; if stuck, co
   Committed `44559bc`.
 - NOTE: `atlas-workspace.exe` (packaged Bun server) observed at ~750MB RSS — flag for the
   compute-monitor pass.
+
+## Resource optimization (2026-08-12)
+- Root cause: embed-assets.mjs embedded opencode.exe (~178MB) + node-pty (~64MB) as base64 string literals; at boot they materialize in the heap and never get freed (JSC literal pool), so atlas-workspace.exe sat at 671MB private / 22MB WS idle.
+- Fix (commit 6a7aae2): stop embedding vendor blobs by default (ATLAS_EMBED_VENDOR=1 restores fat mode); desktop ships vendor as resources and passes ATLAS_NODE_PTY/ATLAS_OPENCODE_DIR to the server; server resolves node-pty via env -> on-disk -> embedded, opencode via opencodeDir().
+- Bug found+fixed while verifying: pty-host.mjs did await import(ATLAS_NODE_PTY) with a backslash Windows path -> dynamic import mangles escapes -> host crashed at boot (node-pty unavailable). Fixed by normalizing to file:// URL.
+- Result (lean exe, env pointing at workspace/vendor): server private 671MB -> 252MB (WS 42MB), embedded-assets.ts 231MB -> 947KB, exe 324.7MB -> 94.2MB. pty-stress 8/8 with host alive.
