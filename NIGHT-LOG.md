@@ -90,3 +90,33 @@ Guardrails: no destructive ops; commit per-fix with clear messages; if stuck, co
 - Batch framing: single-item batch now returns [array]; all-notification batch -> 202 no body; per-item errors carry id:null.
 - GET /api/mcp now 405 + Allow: POST + MCP-Protocol-Version (was 200 parse-error).
 - Verify agent: all 3 fixes confirmed correct end-to-end (live probes), typecheck clean, bun test baseline (54/2/2, pre-existing node-pty ps-list fails only), bundle clean. No new bugs.
+
+## MCP round-2 adversarial audit + fixes (2026-08-12, committed 0667eb7)
+Second independent audit of the MCP layer (distrust of round-1). Found + fixed:
+- **Stale `imports` links never pruned.** `scan.ts` recomputes imports for changed files only,
+  but `mergeScanNodes` never deleted old `imports` links for a file whose imports changed, so
+  removing an import left a phantom edge forever. Fix: `scanNow()` returns `rescanFiles[]`;
+  `mergeScanNodes` drops every `imports` link whose source is a rescan file, then re-adds the
+  fresh ones. Verified on a fixture: stale a→c link gone after c removed.
+- **Stale `dep:`/`git:` nodes never pruned.** Node prune only covered `w:` nodes, so a dep
+  dropped from package.json (or a git branch removed) stayed in the graph forever. Fix: prune
+  now covers `dep:` and `git:` too. Verified `dep:react` gone after removal.
+- **`tools/call` error codes + prototype-chain lookup.** `msg.params` was destructured without
+  validation (null/array crashed or returned garbage); tool lookup used `TOOLS[name]` so
+  `name: "constructor"` (or any prototype name) returned a fake success. Fix: params/name/
+  arguments validated → `-32602`; lookup via `Object.hasOwn` → `-32601` for unknown; empty
+  batch `[]` is Invalid Request `-32600`; message with no `method` is `-32600` not a
+  notification. Verified: typecheck clean, bun test baseline (54/2/2), bundle clean.
+- Committed `0667eb7`. Server exe + desktop portable rebuilt with all fixes.
+
+## First-run dialog: why the packaged server sometimes "didn't start" (2026-08-12)
+- Observed: freshly launched portable showed the window but no `atlas-workspace.exe` child,
+  nothing listening on localhost, empty `--enable-logging` output. Manual exe run worked fine.
+- Root cause: with no `prefs.json`, `main.js` first-run shows a MODAL "Choose workspace folder"
+  dialog (showOpenDialogSync) and BLOCKS `startServer()` until a folder is picked. In an
+  unattended/automated launch nothing clicks it → app sits there forever. By design, not a bug.
+- Additional footgun: if the user CANCELS the dialog, the old code returned and fell through to
+  scanning `app.getPath("home")` — the exact home-dir scan the prompt was added to prevent.
+- Fix (desktop/main.js): `pickWorkspace()` now returns false on cancel; on first-run cancel the
+  app shows a short notice and quits instead of silently scanning home. `node --check` clean.
+- Automation can bypass the dialog via `ATLAS_WORKSPACE` env var (already supported).

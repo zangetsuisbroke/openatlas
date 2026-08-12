@@ -97,11 +97,12 @@ function pickWorkspace() {
     defaultPath: workspace,
     properties: ["openDirectory", "createDirectory"],
   });
-  if (!dirs || !dirs.length) return;
+  if (!dirs || !dirs.length) return false;
   workspace = dirs[0];
   prefs.workspace = workspace;
   savePrefs(prefs);
   if (ready) restartServer();
+  return true;
 }
 
 async function startServer() {
@@ -305,7 +306,14 @@ if (!gotLock) {
       // First run: never default to scanning the entire home directory.
       // Ask once for a real workspace folder before the server boots.
       if (!prefs.workspace && !process.env.ATLAS_WORKSPACE) {
-        pickWorkspace();
+        if (!pickWorkspace()) {
+          dialog.showErrorBox(
+            "Atlas Workspace",
+            "No workspace folder was selected.\n\nAtlas won't scan your home directory by default. Close and relaunch, then choose a folder to scan."
+          );
+          app.quit();
+          return;
+        }
       }
       await startServer();
       ready = true;
