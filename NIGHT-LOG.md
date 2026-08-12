@@ -120,3 +120,16 @@ Second independent audit of the MCP layer (distrust of round-1). Found + fixed:
 - Fix (desktop/main.js): `pickWorkspace()` now returns false on cancel; on first-run cancel the
   app shows a short notice and quits instead of silently scanning home. `node --check` clean.
 - Automation can bypass the dialog via `ATLAS_WORKSPACE` env var (already supported).
+
+## Final fresh-extraction verify (packaged portable, 15:10 build) — PASS
+- Launch: `ATLAS_WORKSPACE=D:\ggggggggggg\OpenAtlas` (bypasses first-run dialog). Server child
+  `atlas-workspace.exe` spawned (~247MB private, settled to 218.7MB after GC). PID 6616.
+- Root returns 200 on packaged server port 50992.
+- `pty-stress.mjs <port> 8` × 3 rounds → **8/8 completed, 8/8 exited cleanly each round**
+  (4543ms/4529ms/4424ms); pty host `node.exe` still alive after all rounds.
+- Compute monitor (30s sample, idle): TOTAL app-tree RSS ~595MB. Breakdown:
+  server 81.5MB RSS / 218.7MB priv; pty host 231.2MB RSS / 363.8MB priv (post-stress, still
+  under the 350MB RSS self-restart cap — no false restarts, WS/RSS 239.6MB < 350MB);
+  Electron renderers 93.9 / 82.3 / 79.8 / 24.3MB; bootstrap stub 12.5MB.
+- Compare vs. pre-optimization: single server alone was 671MB private at boot. App tree now
+  ~595MB RSS TOTAL including server, host, and all Electron renderers.
