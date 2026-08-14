@@ -177,8 +177,8 @@ const LOADING_HTML = `data:text/html;charset=utf-8,${encodeURIComponent(`
 <head>
   <style>
     body {
-      background: #0b0f17;
-      color: #f8fafc;
+      background: #0c0b09;
+      color: #f0eae0;
       font-family: system-ui, -apple-system, sans-serif;
       height: 100vh;
       margin: 0;
@@ -191,15 +191,15 @@ const LOADING_HTML = `data:text/html;charset=utf-8,${encodeURIComponent(`
     .spinner {
       width: 36px;
       height: 36px;
-      border: 3px solid rgba(255,255,255,0.1);
-      border-top-color: #3b82f6;
+      border: 3px solid rgba(240,234,224,0.1);
+      border-top-color: #e6392b;
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
       margin-bottom: 1.25rem;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .title { font-weight: 600; font-size: 1.1rem; margin-bottom: 0.35rem; }
-    .subtitle { color: #64748b; font-size: 0.85rem; font-family: monospace; }
+    .title { font-weight: 600; font-size: 1.1rem; margin-bottom: 0.35rem; letter-spacing: 0.04em; }
+    .subtitle { color: #9b9183; font-size: 0.85rem; font-family: monospace; }
   </style>
 </head>
 <body>
@@ -216,7 +216,7 @@ function createWindow() {
     height: 880,
     minWidth: 900,
     minHeight: 620,
-    backgroundColor: "#0b0f17",
+    backgroundColor: "#0c0b09",
     title: "Atlas Workspace",
     show: true,
     webPreferences: {

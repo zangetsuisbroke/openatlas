@@ -5,6 +5,12 @@ const distDir = join(import.meta.dir, "..", "dist");
 const outFile = join(import.meta.dir, "..", "server", "embedded-assets.ts");
 const root = join(import.meta.dir, "..");
 
+// Landing page is source-authored (vite build wipes dist/, so copy it in).
+const landingSrc = join(import.meta.dir, "..", "landing.html");
+if (existsSync(landingSrc)) {
+  writeFileSync(join(distDir, "landing.html"), readFileSync(landingSrc));
+}
+
 function walk(dir, prefix = "") {
   const out = {};
   for (const name of readdirSync(dir)) {
