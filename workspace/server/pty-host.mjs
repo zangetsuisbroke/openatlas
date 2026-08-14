@@ -68,6 +68,7 @@ rl.on("line", (line) => {
           rows: msg.rows ?? 24,
           cwd: msg.cwd,
           env: msg.env,
+          useConpty: process.env.ATLAS_PTY_USE_CONPTY !== "0",
         });
       } catch (e) {
         emit({ type: "error", id, message: String(e) });

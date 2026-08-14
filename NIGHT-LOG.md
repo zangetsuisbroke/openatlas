@@ -133,3 +133,31 @@ Second independent audit of the MCP layer (distrust of round-1). Found + fixed:
   Electron renderers 93.9 / 82.3 / 79.8 / 24.3MB; bootstrap stub 12.5MB.
 - Compare vs. pre-optimization: single server alone was 671MB private at boot. App tree now
   ~595MB RSS TOTAL including server, host, and all Electron renderers.
+
+## TERMINAL LATENCY — root cause fixed (2026-08-14)
+- User: "the terminal is so slow". Measured + fixed with the autonomous loop.
+- **BEFORE**: WS ping through the app showed **max 3442ms, seventeen 1.1s spikes** during
+  the boot scan. The knowledge-graph scan (`server/scan.ts` `scanNow()`) used sync
+  `readdirSync`/`statSync`, blocking the Bun event loop in ~500ms bursts for the full scan
+  (3.4–3.6s for 106 files on this box). Every keystroke, frame, and WS message froze
+  seconds at a time during boot/file-change/15s-refresh scans — the "slow terminal".
+- **FIX**: `server/scan.ts` → async `node:fs/promises` (`readdir`, `stat`) so stat calls go
+  through the thread pool. File reads already used `await Bun.file().text()`. Scan still
+  completes (106 files ≈ 2.8–3.6s) but never blocks the event loop.
+- **AFTER (same probe, during boot scan)**: ping **max 9ms, zero spikes >25ms**
+  (avg 2.0ms, was 130.8ms with spikes). Compiled-exe WS ping 2ms.
+- Keystroke echo after fix ≈ 15–33ms. Remaining latency is native, not app:
+  * Isolated node-pty test (no app in path, sparse single-char) = **20.6ms** — the
+    Windows 10 1809 ConPTY/cmd cold-input floor.
+  * Burst of 10 chars through the full app echoes each in **4–5ms** — app path overhead
+    is ≤5ms, input path is direct/sync (`shell.ts` `write()` → host stdin, no batching).
+  * Output throughput through the app: 5000 python lines in 46ms (~5.3MB/s); `echo`
+    command round-trip 19ms; WS ping 0.5ms avg.
+  * Conclusion: app adds no meaningful overhead; ~20ms of the residual is native ConPTY
+    cold-input latency on this OS. The visible "slow terminal" was the scan freeze.
+- Supporting changes: `server/pty-host.mjs` — added `useConpty` env toggle
+  (`ATLAS_PTY_USE_CONPTY=0` to force winpty) as a diagnostic knob; removed the
+  temporary `[prof]` instrumentation from the host.
+- Rebuilt `workspace/atlas-workspace.exe` (bun --compile) with the fix; check-clean gate
+  passed for bundle and exe. Desktop portable bundle rebuild: pending (vite UI rebuild
+  is separately broken — pre-existing html-inline-proxy error, unrelated to this fix).
