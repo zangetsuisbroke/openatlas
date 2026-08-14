@@ -1,7 +1,15 @@
 // Bounded real-workspace scan that feeds real entities into the knowledge graph:
 // files, folders, package deps, git status, and file-to-file import links.
 // Runs async at startup, then lazy-refreshes (mtime-based) when stale.
-import { readdirSync, statSync } from "node:fs";
+import { readdir, stat, readFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { execFile as execFileCb } from "node:child_process";
+const execFile = (file: string, args: string[], opts: Record<string, unknown>): Promise<{ stdout: string }> =>
+  new Promise((resolve, reject) =>
+    execFileCb(file, args, opts as import("node:child_process").ExecFileOptions, (err, stdout) =>
+      err ? reject(err) : resolve({ stdout: String(stdout) })
+    )
+  );
 import { basename, dirname, extname, join, relative, sep } from "node:path";
 import { log } from "./log";
 import { appRoot } from "./shell";
@@ -44,16 +52,16 @@ async function walk(root: string, rel: string, depth: number, acc: { files: stri
   if (depth > MAX_DEPTH || acc.files.length > MAX_FILES) return;
   let entries: string[];
   try {
-    entries = readdirSync(join(root, rel));
+    entries = await readdir(join(root, rel));
   } catch {
     return;
   }
   for (const name of entries) {
     const full = join(root, rel, name);
     const r = rel ? `${rel}${sep}${name}` : name;
-    let st: ReturnType<typeof statSync>;
+    let st: Awaited<ReturnType<typeof stat>>;
     try {
-      st = statSync(full);
+      st = await stat(full);
     } catch {
       continue;
     }
@@ -139,8 +147,6 @@ export async function scanNow(): Promise<ScanResult> {
 
   // git status
   try {
-    const { execSync } = require("node:child_process") as typeof import("node:child_process");
-    const { existsSync } = require("node:fs") as typeof import("node:fs");
     // cheap pre-check: only invoke git if a .git dir exists within a few parent levels
     let dir = root;
     let isRepo = false;
@@ -151,9 +157,10 @@ export async function scanNow(): Promise<ScanResult> {
       dir = parent;
     }
     if (isRepo) {
-      const branch = execSync("git branch --show-current", {
-        cwd: root, encoding: "utf8", timeout: 3000, stdio: ["ignore", "pipe", "ignore"],
-      }).trim();
+      const { stdout } = await execFile("git", ["branch", "--show-current"], {
+        cwd: root, encoding: "utf8", timeout: 3000, windowsHide: true,
+      });
+      const branch = stdout.trim();
       if (branch) {
         nodes.push({ id: "git:branch", label: `branch ${branch}`, type: "branch", val: 1.4, created: now, lastActive: now });
       }
@@ -165,7 +172,7 @@ export async function scanNow(): Promise<ScanResult> {
   // package deps
   try {
     const pkgPath = join(root, "package.json");
-    const pkg = JSON.parse(require("node:fs").readFileSync(pkgPath, "utf8") as string);
+    const pkg = JSON.parse(await readFile(pkgPath, "utf8"));
     const deps: Record<string, string> = { ...(pkg.dependencies ?? {}), ...(pkg.devDependencies ?? {}) };
     for (const name of Object.keys(deps)) {
       const id = `dep:${name}`;
@@ -184,9 +191,9 @@ export async function scanNow(): Promise<ScanResult> {
     if (!/\.(ts|tsx|js|jsx|mjs)$/i.test(f)) continue;
     rescanFiles.push(f);
     try {
-      const size = statSync(join(root, f)).size;
+      const size = (await stat(join(root, f))).size;
       if (size > 1_000_000) continue; // skip huge generated/bundle files
-      const text = require("node:fs").readFileSync(join(root, f), "utf8") as string;
+      const text = await readFile(join(root, f), "utf8");
       for (const spec of importsOf(text)) {
         const target = resolveImport(f, spec, fileSet);
         if (target) {
