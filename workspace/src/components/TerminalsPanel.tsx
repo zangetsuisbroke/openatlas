@@ -64,11 +64,11 @@ function TermPane({ id, title }: { id: string; title: string }) {
       theme: {
         background: DARK_BG,
         foreground: DARK_FG,
-        cursor: "#e6392b",
+        cursor: "#d62f22",
         cursorAccent: "#0c0b09",
-        selectionBackground: "rgba(230,57,43,0.25)",
+        selectionBackground: "rgba(214,47,34,0.25)",
         black: "#1b1814",
-        red: "#e0553f",
+        red: "#d14a3a",
         green: "#7fd1a0",
         yellow: "#d9b268",
         blue: "#6f9df1",
@@ -76,7 +76,7 @@ function TermPane({ id, title }: { id: string; title: string }) {
         cyan: "#6cc8e0",
         white: "#cfc6b8",
         brightBlack: "#6b6257",
-        brightRed: "#ff6a58",
+        brightRed: "#f05646",
         brightGreen: "#9ede93",
         brightYellow: "#e8b35a",
         brightBlue: "#89b4fa",
@@ -135,7 +135,7 @@ function TermPane({ id, title }: { id: string; title: string }) {
   return (
     <div className={`term-pane ${minimized ? "minimized" : ""}`}>
       <div className="term-tab">
-        <span className="term-dot" style={{ background: running ? "#e6392b" : "#6b6257" }} />
+        <span className="term-dot" style={{ background: running ? "#d62f22" : "#6b6257" }} />
         <span className="term-title">{title}</span>
         <span className="term-id">{id.slice(0, 8)}</span>
         <div className="term-tab-actions">

@@ -16,7 +16,7 @@ export const NODE_STYLE: Record<NodeType, { color: string; shape: ShapeKind }> =
   package: { color: "#8adfd7", shape: "hex" },
   concept: { color: "#6cc8e0", shape: "circle" },
   decision: { color: "#a892e0", shape: "diamond" },
-  agent: { color: "#e6392b", shape: "hex" },
+  agent: { color: "#d62f22", shape: "hex" },
   task: { color: "#d9b268", shape: "pill" },
   tool: { color: "#93c76a", shape: "triangle" },
   memory: { color: "#8adfd7", shape: "circle" },
@@ -25,7 +25,7 @@ export const NODE_STYLE: Record<NodeType, { color: string; shape: ShapeKind }> =
 };
 
 export const LINK_STYLE: Record<Relation, string> = {
-  derives: "#e6392b",
+  derives: "#d62f22",
   relates: "#4d5560",
   conflicts: "#e0788c",
   activates: "#a892e0",

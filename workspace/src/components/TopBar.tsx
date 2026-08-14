@@ -4,7 +4,7 @@ import { graphReset, newTerm, runDemo, store } from "../ws";
 export type LayoutMode = "split" | "graph" | "terminal" | "opencode";
 
 const ACCENTS: Array<{ name: string; a: string; a2: string }> = [
-  { name: "ember", a: "#e6392b", a2: "#7a120c" },
+  { name: "ember", a: "#d62f22", a2: "#7a120c" },
   { name: "cyan", a: "#4fd8e8", a2: "#2b8aa8" },
   { name: "amber", a: "#e8b35a", a2: "#b07a2b" },
 ];

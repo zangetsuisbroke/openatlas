@@ -192,7 +192,7 @@ const LOADING_HTML = `data:text/html;charset=utf-8,${encodeURIComponent(`
       width: 36px;
       height: 36px;
       border: 3px solid rgba(240,234,224,0.1);
-      border-top-color: #e6392b;
+      border-top-color: #d62f22;
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
       margin-bottom: 1.25rem;

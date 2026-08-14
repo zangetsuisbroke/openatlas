@@ -7,7 +7,7 @@ import OpenCodePanel from "./components/OpenCodePanel";
 import { connect } from "./ws";
 
 const ACCENT_VARS: Record<string, { a: string; a2: string }> = {
-  ember: { a: "#e6392b", a2: "#7a120c" },
+  ember: { a: "#d62f22", a2: "#7a120c" },
   cyan: { a: "#4fd8e8", a2: "#2b8aa8" },
   amber: { a: "#e8b35a", a2: "#b07a2b" },
 };

@@ -257,14 +257,14 @@ const Map2D = forwardRef<Map2DHandle, Props>(function Map2D({ nodes, links, puls
         ctx.shadowBlur = 0;
         ctx.globalAlpha = 1;
 
-        if (view.k > 0.3 && n.label) {
-          ctx.font = `${10.5 / view.k}px 'JetBrains Mono', 'Consolas', monospace`;
+        if (isHover && n.label) {
+          ctx.font = `${11 / view.k}px 'JetBrains Mono', 'Consolas', monospace`;
           ctx.textAlign = "center";
           ctx.textBaseline = "top";
           ctx.lineWidth = 3 / view.k;
-          ctx.strokeStyle = "rgba(8,10,13,0.75)";
+          ctx.strokeStyle = "rgba(12,11,9,0.8)";
           ctx.strokeText(n.label, n.x, n.y + r + 4 / view.k);
-          ctx.fillStyle = isHover ? "#eef1f5" : "#b9c0cb";
+          ctx.fillStyle = isHover ? "#f0eae0" : "#b9c0cb";
           ctx.fillText(n.label, n.x, n.y + r + 4 / view.k);
         }
       }

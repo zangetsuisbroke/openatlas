@@ -9,9 +9,9 @@
   --text: #f0eae0;
   --muted: #9b9183;
   --faint: #6b6257;
-  --accent: #e6392b;
+  --accent: #d62f22;
   --accent-2: #7a120c;
-  --danger: #ff6a58;
+  --danger: #f05646;
   --warn: #e8b35a;
   --info: #6f9df1;
   --radius: 6px;
@@ -156,7 +156,7 @@ body,
 }
 .tb-active i.ok {
   background: var(--accent);
-  box-shadow: 0 0 8px rgba(230, 57, 43, 0.7);
+  box-shadow: 0 0 8px rgba(214, 47, 34, 0.7);
   animation: blink 2.2s ease-in-out infinite;
 }
 @keyframes blink {
@@ -287,7 +287,7 @@ body,
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: rgba(230, 57, 43, 0.12);
+  background: rgba(214, 47, 34, 0.12);
   border: 1px solid var(--accent);
   color: var(--accent);
   font-weight: 700;
@@ -499,7 +499,7 @@ body,
   height: 7px;
   border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 8px rgba(230, 57, 43, 0.6);
+  box-shadow: 0 0 8px rgba(214, 47, 34, 0.6);
 }
 .stream-live {
   background: var(--info);
@@ -707,7 +707,7 @@ select:focus {
   font-family: var(--mono);
   font-size: 10.5px;
   color: var(--accent);
-  background: rgba(230, 57, 43, 0.08);
+  background: rgba(214, 47, 34, 0.08);
   padding: 1px 4px;
   border-radius: 3px;
 }
@@ -749,7 +749,7 @@ select:focus {
 .chip.active {
   color: var(--accent);
   border-color: var(--accent);
-  background: rgba(230, 57, 43, 0.07);
+  background: rgba(214, 47, 34, 0.07);
 }
 
 .stream-list {
@@ -785,7 +785,7 @@ select:focus {
   background: rgba(255, 255, 255, 0.02);
 }
 .event-row.active {
-  background: rgba(230, 57, 43, 0.06);
+  background: rgba(214, 47, 34, 0.06);
   box-shadow: inset 2px 0 0 var(--accent);
 }
 .event-row.fail .event-subject {
@@ -808,7 +808,7 @@ select:focus {
   width: 30px;
   text-align: center;
 }
-.event-badge.agent { background: rgba(230, 57, 43, 0.14); color: var(--accent); }
+.event-badge.agent { background: rgba(214, 47, 34, 0.14); color: var(--accent); }
 .event-badge.tool { background: rgba(147, 199, 106, 0.12); color: #93c76a; }
 .event-badge.file { background: rgba(111, 157, 241, 0.12); color: #6f9df1; }
 .event-badge.system { background: rgba(139, 146, 157, 0.12); color: var(--muted); }
