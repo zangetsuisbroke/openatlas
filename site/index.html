@@ -279,65 +279,64 @@
   }
 
   @media (max-width: 640px) {
-    .wrap { padding: 0 18px; }
-    .ticker span { font-size: 10px; letter-spacing: 0.16em; padding: 9px 0; }
+    .wrap { padding: 0 22px; }
+
+    .ticker { display: none; }
     .nav-inner { height: 60px; }
-    .brand .word { font-size: 10.5px; letter-spacing: 0.2em; }
+    .brand .word { font-size: 11px; letter-spacing: 0.2em; }
     .nav-cta { padding: 10px 14px; font-size: 11px; }
 
-    .hero { padding: 52px 0 44px; }
-    .hero-grid { gap: 36px; }
-    .hero-watermark { font-size: clamp(54px, 17vw, 80px); }
-    .eyebrow { font-size: 10px; letter-spacing: 0.18em; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
+    .hero { padding: 56px 0 44px; }
+    .hero-grid { gap: 34px; }
+    .hero-watermark { display: none; }
+    .eyebrow { font-size: 10px; letter-spacing: 0.18em; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
     .eyebrow::before { width: 26px; }
-    h1 { font-size: clamp(30px, 9vw, 40px); line-height: 1.12; }
-    .lede { margin-top: 22px; font-size: 15.5px; line-height: 1.75; }
+    h1 { font-size: clamp(32px, 9.6vw, 42px); line-height: 1.1; }
+    h1 br { display: none; }
+    .lede { margin-top: 20px; font-size: 16.5px; line-height: 1.75; }
     .hero-cta { margin-top: 28px; gap: 12px; flex-direction: column; align-items: stretch; }
-    .btn { justify-content: center; width: 100%; min-height: 48px; padding: 14px 18px; font-size: 12px; }
-    .hero-meta { margin-top: 22px; gap: 10px; flex-direction: column; }
-    .hero-meta div { font-family: var(--sans); font-size: 13px; line-height: 1.6; text-transform: none; letter-spacing: 0; display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
-    .hero-meta b { font-size: 10px; letter-spacing: 0.16em; }
-    .hero-meta .md { color: var(--faint); }
-    .term-bar { padding: 11px 14px; }
-    .term-body { font-size: 11.5px; padding: 16px 14px 18px; height: 164px; }
+    .btn { justify-content: center; width: 100%; min-height: 52px; padding: 15px 18px; font-size: 12px; }
+    .hero-meta { display: none; }
+    .term-bar { padding: 12px 14px; }
+    .term-body { font-size: 12px; padding: 16px 14px 18px; height: 200px; }
 
-    .download-inner { padding: 20px 0; flex-direction: column; align-items: stretch; gap: 16px; }
-    .download-meta { font-size: 10.5px; }
-    .dl-btns { flex-direction: column; gap: 10px; }
-    .dl-btns .btn { width: 100%; font-size: 11.5px; }
+    .download-bar { display: none; }
 
-    .manifesto-inner { padding: 64px 0; }
-    .manifesto h2 { font-size: clamp(22px, 6.6vw, 31px); line-height: 1.25; }
-    .mano-row { margin-top: 18px; flex-direction: column; gap: 20px; }
-    .mano-cell { min-width: 100%; padding-left: 14px; }
-    .mano-cell p { font-size: 13.5px; }
+    .manifesto-inner { padding: 72px 0; }
+    .manifesto h2 { font-size: clamp(24px, 7.2vw, 32px); line-height: 1.28; }
+    .manifesto h2 br { display: none; }
+    .mano-row { margin-top: 22px; flex-direction: column; gap: 22px; }
+    .mano-cell { min-width: 100%; padding-left: 16px; }
+    .mano-cell p { margin-top: 10px; font-size: 14px; line-height: 1.7; }
 
-    .features { padding: 72px 0 28px; }
-    .sec-head { flex-direction: column; gap: 8px; padding-bottom: 16px; }
-    .feat { padding: 30px 0; gap: 18px; }
-    .feat .lab b { font-size: 21px; }
-    .feat p { font-size: 14px; line-height: 1.7; }
-    .feat .art { min-height: 0; padding: 14px; }
-    .feat .art svg { max-height: 140px; }
-
-    .downloads { padding: 72px 0 28px; }
-    .dl-grid { gap: 18px; margin-top: 30px; }
-    .dl-card { padding: 26px 20px; gap: 14px; }
-    .dl-card h3 { font-size: 20px; }
-    .dl-card p { font-size: 13.5px; }
-    .dl-card .btn { align-self: stretch; width: 100%; margin-top: 8px; }
-    .dl-note { font-size: 10.5px; }
+    .features { padding: 72px 0 24px; }
+    .sec-head { flex-direction: column; gap: 10px; padding-bottom: 18px; }
+    .feat { padding: 36px 0 38px; gap: 18px; }
+    .feat .idx { display: none; }
+    .feat .lab b { font-size: 22px; }
+    .feat p { font-size: 15px; line-height: 1.75; }
+    .feat .art { padding: 16px; }
+    .feat .art svg { max-height: 120px; }
 
     .privacy { padding: 72px 0; }
-    .priv-box { padding: 32px 20px; }
-    .priv-box h3 { font-size: clamp(21px, 6.8vw, 31px); }
-    .priv-row { margin-top: 26px; gap: 18px; }
+    .priv-box { padding: 36px 24px; }
+    .priv-box::before { display: none; }
+    .priv-box h3 { font-size: clamp(22px, 7vw, 30px); }
+    .priv-row { margin-top: 28px; gap: 22px; }
 
-    .final { padding: 24px 0 72px; }
-    .final .in { padding-top: 56px; }
-    .final h2 { font-size: clamp(30px, 8.6vw, 40px); }
-    .final p { margin-top: 16px; font-size: 14.5px; }
-    .final .btn-primary { margin-top: 28px; }
+    .downloads { padding: 72px 0 28px; }
+    .dl-grid { gap: 18px; margin-top: 28px; }
+    .dl-card { padding: 30px 24px; gap: 14px; }
+    .dl-card h3 { font-size: 21px; }
+    .dl-card p { font-size: 14px; line-height: 1.7; }
+    .dl-card .btn { align-self: stretch; width: 100%; margin-top: 8px; }
+    .dl-note { font-size: 11px; }
+
+    .final { padding: 24px 0 80px; }
+    .final .in { padding-top: 60px; }
+    .final h2 { font-size: clamp(32px, 9.2vw, 42px); }
+    .final p { margin-top: 18px; font-size: 15px; }
+    .final .btn-primary { margin-top: 30px; }
 
     .foot-inner { flex-direction: column; gap: 18px; text-align: center; padding: 36px 0; }
     .foot-links { flex-wrap: wrap; justify-content: center; gap: 18px; }
