@@ -183,3 +183,21 @@ Second independent audit of the MCP layer (distrust of round-1). Found + fixed:
   don't drop it; `workspace/atlas-workspace.exe` rebuilt with the landing embedded.
 - Verified: exe serves `/` → 200 landing, `/index.html` → 200 app, fonts → 200.
   Desktop portable bundle still pending (electron-builder aborted twice by user).
+
+## COMMERCIAL WEBSITE + RELEASE (2026-08-15)
+- **Standalone site** (`site/`, committed `db1f048`): same charcoal/red landing, but a
+  real marketing page — relative-font paths, hero + download bar + download cards,
+  commercial copy. Deployed to **Vercel (production)**:
+  - https://site-nine-rho-090gaiuocc.vercel.app (project "site", team pratyush-s-projects4;
+    link committed as `site/.vercel/project.json`)
+  - Verified: landing 200, fonts 200 woff2, download buttons live.
+- **Electron app = the product** (per user): built the proper packages with
+  `cd desktop && npx electron-builder --win nsis portable` (unblocked by killing stale
+  7za/electron-builder that locked `*.nsis.7z`):
+  - `desktop/dist/AtlasWorkspace Setup 0.1.0.exe` (installer) + `AtlasWorkspace 0.1.0.exe`
+    (portable) — both fresh (01:01/01:02), embed the FIXED server + in-app landing.
+- **Downloads hosted via GitHub Release** (160MB won't fit Vercel's 100MB limit):
+  - Public repo: https://github.com/zangetsuisbroke/atlas-workspace (README only, no source)
+  - Release **v0.1.0** with `atlas-workspace-0.1.0-win-x64-setup.exe` (160,142,207 B) and
+    `...-portable.exe` (159,976,603 B); download URLs verified 302→asset.
+- Site "Download" buttons point at `github.com/zangetsuisbroke/atlas-workspace/releases/latest/download/...`.
