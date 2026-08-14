@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Atlas Workspace — local-first code intelligence. Live knowledge graph of your codebase, a local reasoning agent, real PTY terminals. Runs entirely on your machine." />
+<meta property="og:title" content="Atlas Workspace — know your code while it's still moving" />
+<meta property="og:description" content="Live graph, local reasoning, real terminals. One process on your machine." />
+<title>Atlas Workspace — know your code while it's still moving</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 21 7v10l-9 5-9-5V7z' fill='%230c0b09' stroke='%23e6392b' stroke-width='1.6'/%3E%3Ccircle cx='12' cy='12' r='3.4' fill='none' stroke='%23e6392b' stroke-width='1.4'/%3E%3C/svg%3E" />
+<style>
+  @font-face { font-family: "Plus Jakarta Sans"; src: url("fonts/plus-jakarta-sans-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+  @font-face { font-family: "Plus Jakarta Sans"; src: url("fonts/plus-jakarta-sans-500.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+  @font-face { font-family: "Plus Jakarta Sans"; src: url("fonts/plus-jakarta-sans-600.woff2") format("woff2"); font-weight: 600; font-display: swap; }
+  @font-face { font-family: "Plus Jakarta Sans"; src: url("fonts/plus-jakarta-sans-700.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+  @font-face { font-family: "JetBrains Mono"; src: url("fonts/jetbrains-mono-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+  @font-face { font-family: "JetBrains Mono"; src: url("fonts/jetbrains-mono-500.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+  @font-face { font-family: "JetBrains Mono"; src: url("fonts/jetbrains-mono-600.woff2") format("woff2"); font-weight: 600; font-display: swap; }
+  @font-face { font-family: "JetBrains Mono"; src: url("fonts/jetbrains-mono-700.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+
+  :root {
+    --bg: #0c0b09;
+    --bg2: #121009;
+    --panel: #171412;
+    --panel-2: #1b1814;
+    --ink: #f0eae0;
+    --muted: #9b9183;
+    --faint: #6b6257;
+    --line: #2a241e;
+    --line-strong: #3a322a;
+    --red: #e6392b;
+    --red-deep: #7a120c;
+    --red-ink: #ff6a58;
+    --glow: rgba(230, 57, 43, 0.13);
+    --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  ::selection { background: var(--red); color: #fff; }
+
+  a { color: inherit; text-decoration: none; }
+
+  .grain {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 90;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 40px; }
+
+  .ticker { border-bottom: 1px solid var(--line); overflow: hidden; background: var(--bg2); }
+  .ticker-track { display: flex; width: max-content; animation: tick 32s linear infinite; }
+  .ticker span {
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--faint); white-space: nowrap;
+    padding: 10px 0; margin-right: 56px;
+  }
+  .ticker span i { font-style: normal; color: var(--red); margin: 0 24px 0 -8px; }
+  @keyframes tick { to { transform: translateX(-50%); } }
+
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(12, 11, 9, 0.82);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand .word { font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase; }
+  .brand .word em { font-style: normal; color: var(--red); }
+  .nav-links { display: flex; gap: 32px; }
+  .nav-links a {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted);
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--red-ink); }
+  .nav-cta {
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: #fff; background: var(--red);
+    padding: 10px 18px;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+  .nav-cta:hover { background: #f04637; box-shadow: 0 0 0 3px var(--glow), 0 0 24px var(--glow); }
+
+  .diamond { flex: none; width: 20px; height: 20px; }
+  .diamond path { fill: var(--bg); stroke: var(--red); }
+  .diamond circle { fill: none; stroke: var(--red); }
+
+  .hero { position: relative; padding: 110px 0 80px; overflow: hidden; }
+  .hero::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 100% 64px,
+      linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 64px 100%;
+    opacity: 0.22;
+    -webkit-mask-image: radial-gradient(60% 70% at 50% 10%, #000 30%, transparent 100%);
+    mask-image: radial-gradient(60% 70% at 50% 10%, #000 30%, transparent 100%);
+    pointer-events: none;
+  }
+  .hero-watermark {
+    position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+    font-family: var(--sans); font-weight: 700;
+    font-size: clamp(140px, 22vw, 340px); line-height: 1;
+    letter-spacing: -0.05em;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(240, 234, 224, 0.055);
+    user-select: none; pointer-events: none;
+  }
+  .hero-grid { position: relative; display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 72px; align-items: center; }
+
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 12px;
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.26em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 28px;
+  }
+  .eyebrow::before { content: ""; width: 34px; height: 2px; background: var(--red); }
+  .eyebrow b { color: var(--red-ink); font-weight: 600; }
+
+  h1 { font-size: clamp(38px, 5.4vw, 74px); font-weight: 700; line-height: 1.02; letter-spacing: -0.035em; text-wrap: balance; }
+  h1 .red { color: var(--red); }
+  h1 .thin { font-weight: 400; color: var(--muted); }
+
+  .lede { margin-top: 28px; max-width: 540px; font-size: 17px; line-height: 1.7; color: var(--muted); }
+  .lede b { color: var(--ink); font-weight: 600; }
+
+  .hero-cta { display: flex; align-items: center; gap: 28px; margin-top: 40px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 12px;
+    font-family: var(--mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    padding: 16px 26px; transition: all 0.2s;
+  }
+  .btn-primary { background: var(--red); color: #fff; }
+  .btn-primary:hover { background: #f04637; box-shadow: 0 0 0 3px var(--glow), 0 0 30px var(--glow); }
+  .btn-primary .arw { transition: transform 0.2s; }
+  .btn-primary:hover .arw { transform: translateX(4px); }
+  .btn-ghost { color: var(--muted); border: 1px solid var(--line-strong); }
+  .btn-ghost:hover { color: var(--ink); border-color: var(--red); }
+
+  .hero-meta { margin-top: 44px; display: flex; gap: 44px; }
+  .hero-meta div { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); line-height: 1.9; }
+  .hero-meta b { display: block; color: var(--ink); font-size: 13px; font-weight: 600; }
+
+  .term { position: relative; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 40px 80px -30px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,0,0,0.4); }
+  .term::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,0.18) 2px 4px);
+    opacity: 0.5;
+  }
+  .term-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  .term-bar .t { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--faint); }
+  .dots { display: flex; gap: 6px; }
+  .dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); }
+  .dots i:first-child { background: var(--red); }
+  .term-body { font-family: var(--mono); font-size: 12.5px; line-height: 1.75; padding: 18px 18px 22px; color: #cfc6b8; }
+  .term-body .p { color: var(--red-ink); font-weight: 600; }
+  .term-body .d { color: var(--faint); }
+  .term-body .o { color: #a8a091; }
+  .term-body .ok { color: var(--red); font-weight: 600; }
+  .cursor { display: inline-block; width: 8px; height: 15px; background: var(--red); vertical-align: -2px; animation: blink 1.05s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .term-glow { position: absolute; inset: -1px; z-index: -1; background: radial-gradient(60% 45% at 70% 20%, var(--glow), transparent 70%); }
+
+  .download-bar { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--bg2); }
+  .download-inner { padding: 26px 0; display: flex; align-items: center; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+  .download-meta { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); line-height: 2; }
+  .download-meta b { color: var(--ink); font-weight: 600; }
+  .download-meta .r { color: var(--red-ink); font-weight: 600; }
+  .dl-btns { display: flex; gap: 14px; flex-wrap: wrap; }
+  .dl-btns .btn { padding: 13px 20px; font-size: 11px; }
+  .dl-btns .btn-ghost { border-color: var(--line-strong); }
+
+  .manifesto { border-bottom: 1px solid var(--line); background: var(--bg2); }
+  .manifesto-inner { padding: 84px 0; }
+  .manifesto h2 { font-size: clamp(26px, 3.6vw, 46px); font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; max-width: 900px; }
+  .manifesto h2 .red { color: var(--red); }
+  .manifesto h2 .u { text-decoration: underline; text-decoration-color: var(--red); text-underline-offset: 6px; text-decoration-thickness: 2px; }
+  .mano-row { display: flex; gap: 28px; align-items: baseline; margin-top: 12px; flex-wrap: wrap; }
+  .mano-cell { flex: 1; min-width: 200px; border-left: 2px solid var(--line-strong); padding-left: 16px; }
+  .mano-cell b { font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: 0.22em; color: var(--red-ink); }
+  .mano-cell p { margin-top: 8px; font-size: 13.5px; line-height: 1.65; color: var(--muted); }
+
+  .features { padding: 96px 0 40px; }
+  .sec-head { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 18px; }
+  .sec-head .t { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.26em; text-transform: uppercase; color: var(--red-ink); }
+  .sec-head .n { font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; color: var(--faint); }
+
+  .feat { display: grid; grid-template-columns: 84px 300px 1fr 260px; gap: 32px; align-items: start; padding: 44px 0; border-bottom: 1px solid var(--line); }
+  .feat .idx { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--red); padding-top: 6px; }
+  .feat .idx::after { content: ""; display: block; width: 34px; height: 2px; background: var(--red); margin-top: 10px; }
+  .feat .lab { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); padding-top: 6px; }
+  .feat .lab b { display: block; font-size: 24px; font-weight: 600; letter-spacing: 0.02em; color: var(--ink); text-transform: none; margin-top: 10px; font-family: var(--sans); }
+  .feat p { font-size: 15px; line-height: 1.75; color: var(--muted); padding-top: 6px; }
+  .feat p b { color: var(--ink); font-weight: 600; }
+  .feat .art { position: relative; min-height: 130px; border: 1px solid var(--line); background: var(--panel); padding: 18px; display: flex; align-items: flex-end; }
+  .feat .art svg { width: 100%; height: auto; }
+  .feat .art .mono { font-family: var(--mono); font-size: 11px; line-height: 1.9; color: var(--muted); }
+  .feat .art .mono .c { color: var(--red-ink); font-weight: 600; }
+  .feat .art .mono .g { color: var(--faint); }
+
+  .privacy { padding: 96px 0; }
+  .priv-box { border: 1px solid var(--line-strong); background: var(--bg2); padding: 56px 48px; position: relative; overflow: hidden; }
+  .priv-box::before {
+    content: "LOCAL"; position: absolute; right: -10px; top: -8px;
+    font-family: var(--sans); font-weight: 700; font-size: clamp(90px, 12vw, 170px);
+    letter-spacing: -0.04em; line-height: 1;
+    color: transparent; -webkit-text-stroke: 1px rgba(230,57,43,0.16);
+    user-select: none; pointer-events: none;
+  }
+  .priv-box h3 { position: relative; font-size: clamp(24px, 3vw, 38px); font-weight: 600; letter-spacing: -0.02em; max-width: 640px; line-height: 1.15; }
+  .priv-box h3 .red { color: var(--red); }
+  .priv-row { position: relative; margin-top: 34px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .priv-row div { border-top: 2px solid var(--line-strong); padding-top: 14px; }
+  .priv-row b { font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--red-ink); }
+  .priv-row p { margin-top: 10px; font-size: 13px; line-height: 1.6; color: var(--muted); }
+
+  #download { scroll-margin-top: 80px; }
+  .downloads { padding: 96px 0 40px; }
+  .dl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 36px; }
+  .dl-card { border: 1px solid var(--line-strong); background: var(--panel); padding: 34px 30px; display: flex; flex-direction: column; gap: 16px; transition: border-color 0.2s; }
+  .dl-card:hover { border-color: var(--red); }
+  .dl-card .k { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; color: var(--red-ink); }
+  .dl-card h3 { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  .dl-card p { font-size: 13.5px; line-height: 1.65; color: var(--muted); flex: 1; }
+  .dl-card .spec { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: var(--faint); border-top: 1px solid var(--line); padding-top: 14px; }
+  .dl-card .btn { align-self: flex-start; margin-top: 4px; }
+  .dl-note { margin-top: 22px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--faint); line-height: 2; }
+  .dl-note .r { color: var(--red-ink); font-weight: 600; }
+
+  .final { padding: 40px 0 110px; }
+  .final .in { text-align: center; border-top: 1px solid var(--line); padding-top: 90px; }
+  .final h2 { font-size: clamp(34px, 5vw, 64px); font-weight: 700; letter-spacing: -0.03em; }
+  .final h2 .red { color: var(--red); }
+  .final p { margin: 20px auto 0; max-width: 460px; font-size: 15px; line-height: 1.7; color: var(--muted); }
+  .final .btn-primary { margin-top: 40px; font-size: 13px; padding: 18px 30px; }
+
+  footer { border-top: 1px solid var(--line); background: var(--bg2); }
+  .foot-inner { padding: 44px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+  .foot-brand { display: flex; align-items: center; gap: 10px; }
+  .foot-brand .word { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.26em; text-transform: uppercase; }
+  .foot-brand .word em { font-style: normal; color: var(--red); }
+  .foot-links { display: flex; gap: 26px; }
+  .foot-links a { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--faint); transition: color 0.2s; }
+  .foot-links a:hover { color: var(--red-ink); }
+  .foot-clock { font-family: var(--mono); font-size: 11px; color: var(--faint); letter-spacing: 0.14em; }
+
+  .rv { opacity: 0; transform: translateY(22px); transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1); }
+  .rv.in { opacity: 1; transform: none; }
+
+  @media (max-width: 960px) {
+    .wrap { padding: 0 22px; }
+    .hero-grid { grid-template-columns: 1fr; gap: 48px; }
+    .nav-links { display: none; }
+    .feat { grid-template-columns: 1fr; gap: 18px; }
+    .feat .art { min-height: auto; }
+    .priv-row { grid-template-columns: 1fr; }
+    .dl-grid { grid-template-columns: 1fr; }
+    .hero-meta { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track" id="ticker">
+    <span>FILE GRAPHS<i>◆</i>LOCAL REASONING<i>◆</i>REAL PTY TERMINALS<i>◆</i>ZERO TELEMETRY<i>◆</i>ONE EVENT STREAM<i>◆</i>RUNS ENTIRELY ON YOUR MACHINE<i>◆</i>WINDOWS 10 / 11<i>◆</i></span>
+  </div>
+</div>
+
+<nav>
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top">
+      <svg class="diamond" viewBox="0 0 24 24"><path d="M12 2 21 7v10l-9 5-9-5V7z"/><circle cx="12" cy="12" r="3.4"/></svg>
+      <span class="word">ATLAS<em>·</em>WORKSPACE</span>
+    </a>
+    <div class="nav-links">
+      <a href="#graph">graph</a>
+      <a href="#reason">reason</a>
+      <a href="#terminal">terminal</a>
+      <a href="#download">download</a>
+    </div>
+    <a class="nav-cta" href="#download">Download →</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="hero-watermark" aria-hidden="true">ATLAS</div>
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow rv">local-first code intelligence <b>— one process, your machine</b></div>
+      <h1 class="rv">
+        Know your code<br />
+        while it's <span class="red">still moving</span><br />
+        <span class="thin">not after it's committed.</span>
+      </h1>
+      <p class="lede rv">
+        Atlas maps your workspace as you type — files, symbols, dependencies, terminals —
+        into a live knowledge graph, and reasons over that <b>live picture</b> with a local
+        agent. No cloud. No index of your code. Just a process on your disk.
+      </p>
+      <div class="hero-cta rv">
+        <a class="btn btn-primary" href="#download">Download for Windows <span class="arw">→</span></a>
+        <a class="btn btn-ghost" href="#graph">See how it thinks</a>
+      </div>
+      <div class="hero-meta rv">
+        <div><b>LIVE GRAPH</b>updates as you edit</div>
+        <div><b>LOCAL AGENT</b>reads the working tree</div>
+        <div><b>REAL PTY</b>cmd / powershell / bash</div>
+      </div>
+    </div>
+
+    <div class="rv">
+      <div class="term">
+        <div class="term-glow"></div>
+        <div class="term-bar">
+          <span class="t">atlas — terminal 01</span>
+          <span class="dots"><i></i><i></i><i></i></span>
+        </div>
+        <div class="term-body" id="termOut">
+          <div><span class="p">$</span> <span class="o">atlas scan --live</span></div>
+          <div><span class="d">reindex 106 files · 4 modules · 312 symbols</span></div>
+          <div><span class="d">graph warm · last write 41ms ago</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="download-bar">
+  <div class="wrap download-inner">
+    <div class="download-meta rv">
+      <b>ATLAS WORKSPACE v0.1.0</b><br />
+      windows 10 / 11 · x64 · <span class="r">free, runs fully local</span>
+    </div>
+    <div class="dl-btns rv">
+      <a class="btn btn-primary" href="https://github.com/zangetsuisbroke/atlas-workspace/releases/latest/download/atlas-workspace-0.1.0-win-x64-setup.exe">Setup <span class="arw">↓</span></a>
+      <a class="btn btn-ghost" href="https://github.com/zangetsuisbroke/atlas-workspace/releases/latest/download/atlas-workspace-0.1.0-win-x64-portable.exe">Portable ↓</a>
+    </div>
+  </div>
+</section>
+
+<section class="manifesto">
+  <div class="wrap manifesto-inner">
+    <h2 class="rv">
+      The terminal felt slow. The graph was the culprit —<br />
+      a <span class="u">synchronous scan</span> froze the event loop for seconds.<br />
+      Fixed. Now it reads <span class="red">async, in the background.</span>
+    </h2>
+    <div class="mano-row rv">
+      <div class="mano-cell"><b>0.238s</b><p>full workspace scan — down from 2.3s of hard event-loop blocking</p></div>
+      <div class="mano-cell"><b>5ms</b><p>server ping during a live scan — zero spikes, zero frozen keystrokes</p></div>
+      <div class="mano-cell"><b>Local</b><p>graph, agent, and terminals all run in one process on this machine</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="features wrap">
+  <div class="sec-head rv">
+    <span class="t">What it does</span>
+    <span class="n">THE LAYERS / 01–04</span>
+  </div>
+
+  <article class="feat" id="graph">
+    <div class="idx rv">01</div>
+    <div class="lab rv"><b>Graph</b>your code, alive</div>
+    <p class="rv">
+      Every file, symbol, and dependency becomes a node. The map follows the
+      <b>working tree</b> — not history. Rename a function and the graph knows before
+      you save. Rescans run async in the background; the editor never stutters.
+    </p>
+    <div class="art rv" aria-hidden="true">
+      <svg viewBox="0 0 260 90" fill="none">
+        <g stroke="#2a241e" stroke-width="1">
+          <path d="M30 45 H78"/>
+          <path d="M78 45 L130 22"/>
+          <path d="M78 45 L130 68"/>
+          <path d="M130 22 H182"/>
+          <path d="M130 68 H182"/>
+          <path d="M182 22 L230 45"/>
+          <path d="M182 68 L230 45"/>
+        </g>
+        <g fill="#171412">
+          <rect x="22" y="38" width="16" height="14" stroke="#e6392b" stroke-width="1.2"/>
+          <rect x="74" y="38" width="16" height="14" stroke="#3a322a" stroke-width="1.2"/>
+          <rect x="126" y="15" width="16" height="14" stroke="#3a322a" stroke-width="1.2"/>
+          <rect x="126" y="61" width="16" height="14" stroke="#3a322a" stroke-width="1.2"/>
+          <rect x="178" y="15" width="16" height="14" stroke="#3a322a" stroke-width="1.2"/>
+          <rect x="178" y="61" width="16" height="14" stroke="#3a322a" stroke-width="1.2"/>
+        </g>
+      </svg>
+    </div>
+  </article>
+
+  <article class="feat" id="reason">
+    <div class="idx rv">02</div>
+    <div class="lab rv"><b>Reason</b>an agent with eyes on your work</div>
+    <p class="rv">
+      Ask questions about the code you're <b>actually writing</b>. The agent reads the open
+      workspace — symbols, files, terminal output — the same live picture you see. It runs
+      local models. Your code never leaves this process.
+    </p>
+    <div class="art rv" aria-hidden="true">
+      <div class="mono">
+        <div><span class="g">> why is the terminal slow?</span></div>
+        <div><span class="c">scan_now()</span> uses sync fs →</div>
+        <div>blocked event loop 2.3s.</div>
+        <div><span class="g">> fix it.</span></div>
+        <div><span class="c">done.</span> <span class="g">238ms, async.</span></div>
+      </div>
+    </div>
+  </article>
+
+  <article class="feat" id="terminal">
+    <div class="idx rv">03</div>
+    <div class="lab rv"><b>Terminal</b>real shells, zero echo lag</div>
+    <p class="rv">
+      Full node-pty shells — cmd, PowerShell, bash. Keystrokes go <b>straight to the pty</b>;
+      no JSON round-trip between your fingers and the shell. Output streams through one
+      ordered channel at megabytes per second.
+    </p>
+    <div class="art rv" aria-hidden="true">
+      <div class="mono">
+        <div><span class="g">$</span> <span class="c">key →</span> pty.stdin <span class="g">· direct</span></div>
+        <div><span class="g">$</span> pty.stdout <span class="c">→</span> ws <span class="g">· batched</span></div>
+        <div><span class="g">$</span> 5.3 MB/s <span class="g">· 0.5ms ping</span></div>
+      </div>
+    </div>
+  </article>
+
+  <article class="feat" id="stream">
+    <div class="idx rv">04</div>
+    <div class="lab rv"><b>Stream</b>one ordered timeline</div>
+    <p class="rv">
+      Scans, rebuilds, agent turns, shell output — every event lands in a single ordered
+      stream. No races, no dropped frames, no "which process wrote that". The whole app is
+      one timeline you can re-read.
+    </p>
+    <div class="art rv" aria-hidden="true">
+      <svg viewBox="0 0 260 90" fill="none">
+        <line x1="10" y1="12" x2="250" y2="12" stroke="#2a241e" stroke-width="1"/>
+        <circle cx="20" cy="12" r="3" fill="#e6392b"/>
+        <circle cx="84" cy="12" r="3" fill="#e6392b"/>
+        <circle cx="158" cy="12" r="3" fill="#e6392b"/>
+        <circle cx="230" cy="12" r="3" fill="#e6392b"/>
+        <g font-family="monospace" font-size="8" fill="#6b6257">
+          <text x="16" y="26">scan</text>
+          <text x="72" y="26">edit</text>
+          <text x="146" y="26">agent</text>
+          <text x="218" y="26">shell</text>
+        </g>
+        <g stroke="#3a322a" stroke-width="1">
+          <path d="M20 40 v20 M20 60 h64 M84 40 v20 M84 60 h74 M158 40 v20 M158 60 h72 M230 40 v20"/>
+        </g>
+      </svg>
+    </div>
+  </article>
+</section>
+
+<section class="privacy wrap">
+  <div class="priv-box rv">
+    <h3>
+      No cloud. No telemetry. No copy of your code
+      <span class="red">anywhere but this machine.</span>
+    </h3>
+    <div class="priv-row">
+      <div><b>One process</b><p>Server, graph, terminals, and agent run in a single local process.</p></div>
+      <div><b>Zero telemetry</b><p>Nothing phones home. No analytics, no crash reporters, no accounts.</p></div>
+      <div><b>Plain files</b><p>The graph is a file in your workspace. Inspect it, own it, delete it.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="downloads wrap" id="download">
+  <div class="sec-head rv">
+    <span class="t">Download</span>
+    <span class="n">V0.1.0 · WINDOWS X64</span>
+  </div>
+  <div class="dl-grid">
+    <div class="dl-card rv">
+      <span class="k">Installer — recommended</span>
+      <h3>Atlas Workspace Setup</h3>
+      <p>Installs the app, adds a Start-menu entry and desktop shortcut. One-click, per-user, no admin. Auto-launches when done.</p>
+      <div class="spec">atlas-workspace-0.1.0-win-x64-setup.exe</div>
+      <a class="btn btn-primary" href="https://github.com/zangetsuisbroke/atlas-workspace/releases/latest/download/atlas-workspace-0.1.0-win-x64-setup.exe">Download setup <span class="arw">↓</span></a>
+    </div>
+    <div class="dl-card rv">
+      <span class="k">Portable — no install</span>
+      <h3>Atlas Workspace Portable</h3>
+      <p>Single self-contained exe. Run it from any folder or USB stick; nothing is written outside the app's directory.</p>
+      <div class="spec">atlas-workspace-0.1.0-win-x64-portable.exe</div>
+      <a class="btn btn-ghost" href="https://github.com/zangetsuisbroke/atlas-workspace/releases/latest/download/atlas-workspace-0.1.0-win-x64-portable.exe">Download portable <span class="arw">↓</span></a>
+    </div>
+  </div>
+  <p class="dl-note rv">
+    Windows 10/11 · x64 · <span class="r">free</span> — the download is a signed distribution of the open-source build.
+    SHA-256 checksums are published on the release page. No account, no telemetry, no trials.
+  </p>
+</section>
+
+<section class="final wrap">
+  <div class="in rv">
+    <h2>It's a workspace. <span class="red">Make it yours.</span></h2>
+    <p>Download the app and point it at any folder. The graph builds itself while you type.</p>
+    <a class="btn btn-primary" href="https://github.com/zangetsuisbroke/atlas-workspace/releases/latest/download/atlas-workspace-0.1.0-win-x64-setup.exe">Download for Windows <span class="arw">→</span></a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-inner">
+    <div class="foot-brand">
+      <svg class="diamond" viewBox="0 0 24 24"><path d="M12 2 21 7v10l-9 5-9-5V7z"/><circle cx="12" cy="12" r="3.4"/></svg>
+      <span class="word">ATLAS<em>·</em>WORKSPACE</span>
+    </div>
+    <div class="foot-links">
+      <a href="#graph">graph</a>
+      <a href="#reason">reason</a>
+      <a href="#terminal">terminal</a>
+      <a href="#download">download</a>
+    </div>
+    <div class="foot-clock" id="clock">— — — —</div>
+  </div>
+</footer>
+
+<script>
+  var track = document.getElementById("ticker");
+  track.innerHTML += track.innerHTML;
+
+  var term = document.getElementById("termOut");
+  var lines = [
+    ['<span class="p">$</span> <span class="o">atlas scan --live</span>', 500],
+    ['<span class="d">reindex 106 files · 4 modules · 312 symbols</span>', 900],
+    ['<span class="d">graph warm · last write 41ms ago</span>', 900],
+    ['<span class="p">$</span> <span class="o">ask "why does build feel slow?"</span>', 500],
+    ['<span class="d">reading working tree… local model…</span>', 1400],
+    ['<span class="c">took 1.2s — event-loop blocked by sync scan.</span> <span class="ok">patched.</span>', 1100],
+    ['<span class="p">$</span> <span class="o">ping</span>', 600],
+    ['<span class="ok">0.5ms · zero spikes</span>', 400]
+  ];
+  var li = 0;
+  function nextLine() {
+    var d = document.createElement("div");
+    d.innerHTML = lines[li][0] + ' <span class="cursor"></span>';
+    term.appendChild(d);
+    term.scrollTop = term.scrollHeight;
+    var last = d;
+    setTimeout(function () {
+      last.innerHTML = lines[li][0];
+      li = (li + 1) % lines.length;
+      nextLine();
+    }, lines[li][1]);
+  }
+  term.querySelectorAll("div:not(.typing)").forEach(function (el) { el.remove(); });
+  setTimeout(nextLine, 1600);
+
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll(".rv").forEach(function (el, i) {
+    el.style.transitionDelay = (i % 3) * 0.06 + "s";
+    io.observe(el);
+  });
+
+  function tick() {
+    var now = new Date();
+    var p = function (n) { return String(n).padStart(2, "0"); };
+    document.getElementById("clock").textContent =
+      now.toISOString().slice(0, 10) + " " + p(now.getHours()) + ":" + p(now.getMinutes()) + " LOCAL";
+  }
+  tick();
+  setInterval(tick, 10000);
+</script>
+</body>
+</html>
