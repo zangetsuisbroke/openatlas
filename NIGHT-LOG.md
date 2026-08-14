@@ -167,3 +167,19 @@ Second independent audit of the MCP layer (distrust of round-1). Found + fixed:
   the pre-fix server — rebuild via `cd desktop && npx electron-builder --win portable`
   (electron-builder run was aborted; the vite UI rebuild is separately broken with a
   pre-existing html-inline-proxy error unrelated to this fix).
+
+## LANDING PAGE — new (2026-08-15)
+- Added a product landing page (`workspace/landing.html`, self-contained HTML/CSS/JS,
+  no build step). Palette: warm charcoal black (`#0c0b09`) + signal red (`#e6392b`),
+  editorial/industrial look — Plus Jakarta Sans display + JetBrains Mono labels (both
+  already bundled in `dist/fonts/`), hairline grid, film grain, mono ticker, live
+  terminal mock, reveal-on-scroll. Copy covers the four layers (graph / reason /
+  terminal / stream) + privacy; reasoning section is about the live workspace +
+  local agent, NOT git.
+- Routing (`8e45c51`): root `/` (and `/landing`) now serves the landing page; the app
+  moves to `/index.html` (safe — app uses `location.host` + root-relative assets).
+  Desktop splash/background recolored charcoal+red in `desktop/main.js`.
+- `scripts/embed-assets.mjs` now copies `landing.html` into `dist/` so vite builds
+  don't drop it; `workspace/atlas-workspace.exe` rebuilt with the landing embedded.
+- Verified: exe serves `/` → 200 landing, `/index.html` → 200 app, fonts → 200.
+  Desktop portable bundle still pending (electron-builder aborted twice by user).
