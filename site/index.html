@@ -279,43 +279,65 @@
   }
 
   @media (max-width: 640px) {
-    .wrap { padding: 0 16px; }
-    .ticker span { font-size: 9px; letter-spacing: 0.16em; padding: 8px 0; }
-    .nav-inner { height: 56px; }
-    .brand .word { font-size: 10px; letter-spacing: 0.2em; }
-    .nav-cta { padding: 8px 12px; font-size: 10px; }
-    .hero { padding: 64px 0 56px; }
-    .hero-grid { gap: 40px; }
-    .hero-watermark { font-size: clamp(88px, 24vw, 130px); }
-    .eyebrow { font-size: 9.5px; letter-spacing: 0.16em; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-    .eyebrow::before { width: 24px; }
-    h1 { font-size: clamp(28px, 8.4vw, 38px); }
-    .lede { margin-top: 20px; font-size: 15px; line-height: 1.65; }
-    .hero-cta { margin-top: 30px; gap: 12px; flex-direction: column; align-items: stretch; }
-    .btn { justify-content: center; width: 100%; padding: 14px 18px; }
-    .hero-meta { margin-top: 32px; gap: 20px; flex-direction: column; }
-    .term-body { font-size: 11px; padding: 14px 14px 18px; height: 158px; }
-    .manifesto-inner { padding: 56px 0; }
-    .manifesto h2 { font-size: clamp(21px, 6.2vw, 30px); }
-    .mano-row { flex-direction: column; gap: 22px; }
-    .mano-cell { min-width: 100%; }
-    .features { padding: 64px 0 24px; }
-    .sec-head { flex-direction: column; gap: 6px; }
-    .feat { padding: 32px 0; gap: 14px; }
-    .feat .lab b { font-size: 20px; }
-    .feat p { font-size: 14px; }
-    .downloads { padding: 64px 0 24px; }
-    .dl-grid { gap: 16px; margin-top: 28px; }
-    .dl-card { padding: 26px 20px; }
-    .dl-card .btn { align-self: stretch; margin-top: 6px; }
-    .privacy { padding: 64px 0; }
-    .priv-box { padding: 36px 22px; }
-    .priv-box h3 { font-size: clamp(20px, 6.4vw, 30px); }
-    .priv-row { margin-top: 26px; gap: 20px; }
-    .final { padding: 24px 0 80px; }
-    .final .in { padding-top: 60px; }
-    .final h2 { font-size: clamp(28px, 8vw, 38px); }
+    .wrap { padding: 0 18px; }
+    .ticker span { font-size: 10px; letter-spacing: 0.16em; padding: 9px 0; }
+    .nav-inner { height: 60px; }
+    .brand .word { font-size: 10.5px; letter-spacing: 0.2em; }
+    .nav-cta { padding: 10px 14px; font-size: 11px; }
+
+    .hero { padding: 52px 0 44px; }
+    .hero-grid { gap: 36px; }
+    .hero-watermark { font-size: clamp(70px, 21vw, 108px); }
+    .eyebrow { font-size: 10px; letter-spacing: 0.18em; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
+    .eyebrow::before { width: 26px; }
+    h1 { font-size: clamp(30px, 9vw, 40px); line-height: 1.12; }
+    .lede { margin-top: 22px; font-size: 15.5px; line-height: 1.75; }
+    .hero-cta { margin-top: 28px; gap: 12px; flex-direction: column; align-items: stretch; }
+    .btn { justify-content: center; width: 100%; min-height: 48px; padding: 14px 18px; font-size: 12px; }
+    .hero-meta { margin-top: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .hero-meta div { font-size: 10px; line-height: 1.6; }
+    .hero-meta b { font-size: 12px; }
+    .term-bar { padding: 11px 14px; }
+    .term-body { font-size: 11.5px; padding: 16px 14px 18px; height: 164px; }
+
+    .download-inner { padding: 20px 0; flex-direction: column; align-items: stretch; gap: 16px; }
+    .download-meta { font-size: 10.5px; }
+    .dl-btns { flex-direction: column; gap: 10px; }
+    .dl-btns .btn { width: 100%; font-size: 11.5px; }
+
+    .manifesto-inner { padding: 64px 0; }
+    .manifesto h2 { font-size: clamp(22px, 6.6vw, 31px); line-height: 1.25; }
+    .mano-row { margin-top: 18px; flex-direction: column; gap: 20px; }
+    .mano-cell { min-width: 100%; padding-left: 14px; }
+    .mano-cell p { font-size: 13.5px; }
+
+    .features { padding: 72px 0 28px; }
+    .sec-head { flex-direction: column; gap: 8px; padding-bottom: 16px; }
+    .feat { padding: 30px 0; gap: 18px; }
+    .feat .lab b { font-size: 21px; }
+    .feat p { font-size: 14px; line-height: 1.7; }
+    .feat .art { min-height: 0; padding: 14px; }
+    .feat .art svg { max-height: 140px; }
+
+    .downloads { padding: 72px 0 28px; }
+    .dl-grid { gap: 18px; margin-top: 30px; }
+    .dl-card { padding: 26px 20px; gap: 14px; }
+    .dl-card h3 { font-size: 20px; }
+    .dl-card p { font-size: 13.5px; }
+    .dl-card .btn { align-self: stretch; width: 100%; margin-top: 8px; }
+    .dl-note { font-size: 10.5px; }
+
+    .privacy { padding: 72px 0; }
+    .priv-box { padding: 32px 20px; }
+    .priv-box h3 { font-size: clamp(21px, 6.8vw, 31px); }
+    .priv-row { margin-top: 26px; gap: 18px; }
+
+    .final { padding: 24px 0 72px; }
+    .final .in { padding-top: 56px; }
+    .final h2 { font-size: clamp(30px, 8.6vw, 40px); }
+    .final p { margin-top: 16px; font-size: 14.5px; }
     .final .btn-primary { margin-top: 28px; }
+
     .foot-inner { flex-direction: column; gap: 18px; text-align: center; padding: 36px 0; }
     .foot-links { flex-wrap: wrap; justify-content: center; gap: 18px; }
   }
