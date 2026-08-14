@@ -188,9 +188,12 @@ Second independent audit of the MCP layer (distrust of round-1). Found + fixed:
 - **Standalone site** (`site/`, committed `db1f048`): same charcoal/red landing, but a
   real marketing page — relative-font paths, hero + download bar + download cards,
   commercial copy. Deployed to **Vercel (production)**:
-  - https://site-nine-rho-090gaiuocc.vercel.app (project "site", team pratyush-s-projects4;
-    link committed as `site/.vercel/project.json`)
-  - Verified: landing 200, fonts 200 woff2, download buttons live.
+  - https://openatlas-hq.vercel.app (project renamed "site"→"openatlas-hq", team
+    pratyush-s-projects4; `.vercel/project.json` updated; old alias site-nine-rho kept as backup).
+    `openatlas.vercel.app` taken globally. Project had `ssoProtection: all_except_custom_domains`
+    (new aliases SSO-walled); cleared it via `PATCH /v9/projects/:id {"ssoProtection":null}` —
+    all deployments + aliases now public.
+  - Verified: 200, 640px mobile block, OPEN·ATLAS branding, fonts 200 woff2, download buttons live.
 - **Electron app = the product** (per user): built the proper packages with
   `cd desktop && npx electron-builder --win nsis portable` (unblocked by killing stale
   7za/electron-builder that locked `*.nsis.7z`):
