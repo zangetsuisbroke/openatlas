@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="description" content="Atlas Workspace — local-first code intelligence. Live knowledge graph of your codebase, a local reasoning agent, real PTY terminals. Runs entirely on your machine." />
-<meta property="og:title" content="Atlas Workspace — know your code while it's still moving" />
+<meta name="description" content="OpenAtlas — local-first code intelligence. Live knowledge graph of your codebase, a local reasoning agent, real PTY terminals. Runs entirely on your machine." />
+<meta property="og:title" content="OpenAtlas — know your code while it's still moving" />
 <meta property="og:description" content="Live graph, local reasoning, real terminals. One process on your machine." />
-<title>Atlas Workspace — know your code while it's still moving</title>
+<title>OpenAtlas — know your code while it's still moving</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 21 7v10l-9 5-9-5V7z' fill='%230c0b09' stroke='%23e6392b' stroke-width='1.6'/%3E%3Ccircle cx='12' cy='12' r='3.4' fill='none' stroke='%23e6392b' stroke-width='1.4'/%3E%3C/svg%3E" />
 <style>
   @font-face { font-family: "Plus Jakarta Sans"; src: url("fonts/plus-jakarta-sans-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
@@ -277,6 +277,48 @@
     .dl-grid { grid-template-columns: 1fr; }
     .hero-meta { flex-wrap: wrap; }
   }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 0 16px; }
+    .ticker span { font-size: 9px; letter-spacing: 0.16em; padding: 8px 0; }
+    .nav-inner { height: 56px; }
+    .brand .word { font-size: 10px; letter-spacing: 0.2em; }
+    .nav-cta { padding: 8px 12px; font-size: 10px; }
+    .hero { padding: 64px 0 56px; }
+    .hero-grid { gap: 40px; }
+    .hero-watermark { font-size: clamp(88px, 24vw, 130px); }
+    .eyebrow { font-size: 9.5px; letter-spacing: 0.16em; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .eyebrow::before { width: 24px; }
+    h1 { font-size: clamp(28px, 8.4vw, 38px); }
+    .lede { margin-top: 20px; font-size: 15px; line-height: 1.65; }
+    .hero-cta { margin-top: 30px; gap: 12px; flex-direction: column; align-items: stretch; }
+    .btn { justify-content: center; width: 100%; padding: 14px 18px; }
+    .hero-meta { margin-top: 32px; gap: 20px; flex-direction: column; }
+    .term-body { font-size: 11px; padding: 14px 14px 18px; height: 158px; }
+    .manifesto-inner { padding: 56px 0; }
+    .manifesto h2 { font-size: clamp(21px, 6.2vw, 30px); }
+    .mano-row { flex-direction: column; gap: 22px; }
+    .mano-cell { min-width: 100%; }
+    .features { padding: 64px 0 24px; }
+    .sec-head { flex-direction: column; gap: 6px; }
+    .feat { padding: 32px 0; gap: 14px; }
+    .feat .lab b { font-size: 20px; }
+    .feat p { font-size: 14px; }
+    .downloads { padding: 64px 0 24px; }
+    .dl-grid { gap: 16px; margin-top: 28px; }
+    .dl-card { padding: 26px 20px; }
+    .dl-card .btn { align-self: stretch; margin-top: 6px; }
+    .privacy { padding: 64px 0; }
+    .priv-box { padding: 36px 22px; }
+    .priv-box h3 { font-size: clamp(20px, 6.4vw, 30px); }
+    .priv-row { margin-top: 26px; gap: 20px; }
+    .final { padding: 24px 0 80px; }
+    .final .in { padding-top: 60px; }
+    .final h2 { font-size: clamp(28px, 8vw, 38px); }
+    .final .btn-primary { margin-top: 28px; }
+    .foot-inner { flex-direction: column; gap: 18px; text-align: center; padding: 36px 0; }
+    .foot-links { flex-wrap: wrap; justify-content: center; gap: 18px; }
+  }
 </style>
 </head>
 <body>
@@ -292,7 +334,7 @@
   <div class="wrap nav-inner">
     <a class="brand" href="#top">
       <svg class="diamond" viewBox="0 0 24 24"><path d="M12 2 21 7v10l-9 5-9-5V7z"/><circle cx="12" cy="12" r="3.4"/></svg>
-      <span class="word">ATLAS<em>·</em>WORKSPACE</span>
+      <span class="word">OPEN<em>ATLAS</em></span>
     </a>
     <div class="nav-links">
       <a href="#graph">graph</a>
@@ -305,7 +347,7 @@
 </nav>
 
 <header class="hero" id="top">
-  <div class="hero-watermark" aria-hidden="true">ATLAS</div>
+  <div class="hero-watermark" aria-hidden="true">OPENATLAS</div>
   <div class="wrap hero-grid">
     <div>
       <div class="eyebrow rv">local-first code intelligence <b>— one process, your machine</b></div>
@@ -315,7 +357,7 @@
         <span class="thin">not after it's committed.</span>
       </h1>
       <p class="lede rv">
-        Atlas maps your workspace as you type — files, symbols, dependencies, terminals —
+        OpenAtlas maps your workspace as you type — files, symbols, dependencies, terminals —
         into a live knowledge graph, and reasons over that <b>live picture</b> with a local
         agent. No cloud. No index of your code. Just a process on your disk.
       </p>
@@ -350,7 +392,7 @@
 <section class="download-bar">
   <div class="wrap download-inner">
     <div class="download-meta rv">
-      <b>ATLAS WORKSPACE v0.1.0</b><br />
+      <b>OPENATLAS v0.1.0</b><br />
       windows 10 / 11 · x64 · <span class="r">free, runs fully local</span>
     </div>
     <div class="dl-btns rv">
@@ -499,14 +541,14 @@
   <div class="dl-grid">
     <div class="dl-card rv">
       <span class="k">Installer — recommended</span>
-      <h3>Atlas Workspace Setup</h3>
+      <h3>OpenAtlas Setup</h3>
       <p>Installs the app, adds a Start-menu entry and desktop shortcut. One-click, per-user, no admin. Auto-launches when done.</p>
       <div class="spec">atlas-workspace-0.1.0-win-x64-setup.exe</div>
       <a class="btn btn-primary" href="https://github.com/zangetsuisbroke/atlas-workspace/releases/latest/download/atlas-workspace-0.1.0-win-x64-setup.exe">Download setup <span class="arw">↓</span></a>
     </div>
     <div class="dl-card rv">
       <span class="k">Portable — no install</span>
-      <h3>Atlas Workspace Portable</h3>
+      <h3>OpenAtlas Portable</h3>
       <p>Single self-contained exe. Run it from any folder or USB stick; nothing is written outside the app's directory.</p>
       <div class="spec">atlas-workspace-0.1.0-win-x64-portable.exe</div>
       <a class="btn btn-ghost" href="https://github.com/zangetsuisbroke/atlas-workspace/releases/latest/download/atlas-workspace-0.1.0-win-x64-portable.exe">Download portable <span class="arw">↓</span></a>
@@ -530,7 +572,7 @@
   <div class="wrap foot-inner">
     <div class="foot-brand">
       <svg class="diamond" viewBox="0 0 24 24"><path d="M12 2 21 7v10l-9 5-9-5V7z"/><circle cx="12" cy="12" r="3.4"/></svg>
-      <span class="word">ATLAS<em>·</em>WORKSPACE</span>
+      <span class="word">OPEN<em>ATLAS</em></span>
     </div>
     <div class="foot-links">
       <a href="#graph">graph</a>
