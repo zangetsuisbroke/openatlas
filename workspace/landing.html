@@ -329,16 +329,17 @@
 
     .hero { padding: 52px 0 44px; }
     .hero-grid { gap: 36px; }
-    .hero-watermark { font-size: clamp(70px, 21vw, 108px); }
+    .hero-watermark { font-size: clamp(54px, 17vw, 80px); }
     .eyebrow { font-size: 10px; letter-spacing: 0.18em; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
     .eyebrow::before { width: 26px; }
     h1 { font-size: clamp(30px, 9vw, 40px); line-height: 1.12; }
     .lede { margin-top: 22px; font-size: 15.5px; line-height: 1.75; }
     .hero-cta { margin-top: 28px; gap: 12px; flex-direction: column; align-items: stretch; }
     .btn { justify-content: center; width: 100%; min-height: 48px; padding: 14px 18px; font-size: 12px; }
-    .hero-meta { margin-top: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-    .hero-meta div { font-size: 10px; line-height: 1.6; }
-    .hero-meta b { font-size: 12px; }
+    .hero-meta { margin-top: 22px; gap: 10px; flex-direction: column; }
+    .hero-meta div { font-family: var(--sans); font-size: 13px; line-height: 1.6; text-transform: none; letter-spacing: 0; display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+    .hero-meta b { font-size: 10px; letter-spacing: 0.16em; }
+    .hero-meta .md { color: var(--faint); }
     .term-bar { padding: 11px 14px; }
     .term-body { font-size: 11.5px; padding: 16px 14px 18px; height: 164px; }
 
@@ -417,9 +418,9 @@
         <a class="btn btn-ghost" href="#graph">See how it thinks</a>
       </div>
       <div class="hero-meta rv">
-        <div><b>LIVE GRAPH</b>updates as you edit</div>
-        <div><b>LOCAL AGENT</b>reads the working tree</div>
-        <div><b>REAL PTY</b>cmd / powershell / bash</div>
+        <div><b>LIVE GRAPH</b><span class="md">updates as you edit</span></div>
+        <div><b>LOCAL AGENT</b><span class="md">reads the working tree</span></div>
+        <div><b>REAL PTY</b><span class="md">cmd / powershell / bash</span></div>
       </div>
     </div>
 
