@@ -5,8 +5,8 @@ import { CanvasAddon } from "@xterm/addon-canvas";
 import "@xterm/xterm/css/xterm.css";
 import { killTerm, newTerm, store, termInput, termResize } from "../ws";
 
-const DARK_BG = "#0b0d10";
-const DARK_FG = "#c9d1d9";
+const DARK_BG = "#0c0b09";
+const DARK_FG = "#cfc6b8";
 
 export default function TerminalsPanel() {
   const sessions = useStore((s) => s.sessions);
@@ -64,25 +64,25 @@ function TermPane({ id, title }: { id: string; title: string }) {
       theme: {
         background: DARK_BG,
         foreground: DARK_FG,
-        cursor: "#59dda6",
-        cursorAccent: "#0b0d10",
-        selectionBackground: "rgba(89,221,166,0.22)",
-        black: "#16191d",
-        red: "#e0788c",
+        cursor: "#e6392b",
+        cursorAccent: "#0c0b09",
+        selectionBackground: "rgba(230,57,43,0.25)",
+        black: "#1b1814",
+        red: "#e0553f",
         green: "#7fd1a0",
         yellow: "#d9b268",
         blue: "#6f9df1",
         magenta: "#a892e0",
         cyan: "#6cc8e0",
-        white: "#c9d1d9",
-        brightBlack: "#4d5560",
-        brightRed: "#f7768e",
+        white: "#cfc6b8",
+        brightBlack: "#6b6257",
+        brightRed: "#ff6a58",
         brightGreen: "#9ede93",
-        brightYellow: "#e0af68",
+        brightYellow: "#e8b35a",
         brightBlue: "#89b4fa",
         brightMagenta: "#bb9af7",
         brightCyan: "#7dcfff",
-        brightWhite: "#eef1f5",
+        brightWhite: "#f0eae0",
       },
     });
     const fit = new FitAddon();
@@ -135,7 +135,7 @@ function TermPane({ id, title }: { id: string; title: string }) {
   return (
     <div className={`term-pane ${minimized ? "minimized" : ""}`}>
       <div className="term-tab">
-        <span className="term-dot" style={{ background: running ? "#59dda6" : "#4d5560" }} />
+        <span className="term-dot" style={{ background: running ? "#e6392b" : "#6b6257" }} />
         <span className="term-title">{title}</span>
         <span className="term-id">{id.slice(0, 8)}</span>
         <div className="term-tab-actions">

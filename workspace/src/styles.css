@@ -1,18 +1,18 @@
 :root {
-  --bg: #0b0d10;
-  --bg-soft: #0e1115;
-  --panel: #10141a;
-  --panel-2: #131820;
-  --panel-3: #0d1014;
-  --border: #1d232d;
-  --border-2: #262c36;
-  --text: #e6e9ee;
-  --muted: #8b929d;
-  --faint: #555d68;
-  --accent: #59dda6;
-  --accent-2: #2f9f74;
-  --danger: #f7768e;
-  --warn: #e0af68;
+  --bg: #0c0b09;
+  --bg-soft: #100e0b;
+  --panel: #171412;
+  --panel-2: #1b1814;
+  --panel-3: #121009;
+  --border: #2a241e;
+  --border-2: #3a322a;
+  --text: #f0eae0;
+  --muted: #9b9183;
+  --faint: #6b6257;
+  --accent: #e6392b;
+  --accent-2: #7a120c;
+  --danger: #ff6a58;
+  --warn: #e8b35a;
   --info: #6f9df1;
   --radius: 6px;
   --mono: "JetBrains Mono", "Consolas", ui-monospace, monospace;
@@ -99,7 +99,7 @@ body,
   gap: 16px;
   height: 42px;
   padding: 0 12px;
-  background: linear-gradient(180deg, #0d1015, #0a0c0f);
+  background: linear-gradient(180deg, #12100d, #0a0907);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
@@ -156,7 +156,7 @@ body,
 }
 .tb-active i.ok {
   background: var(--accent);
-  box-shadow: 0 0 8px rgba(89, 221, 166, 0.7);
+  box-shadow: 0 0 8px rgba(230, 57, 43, 0.7);
   animation: blink 2.2s ease-in-out infinite;
 }
 @keyframes blink {
@@ -202,7 +202,7 @@ body,
 }
 .tb-btn.accent {
   background: var(--accent);
-  color: #06211a;
+  color: #fff7f0;
   border-color: transparent;
 }
 .tb-btn.accent:hover {
@@ -287,7 +287,7 @@ body,
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: rgba(89, 221, 166, 0.12);
+  background: rgba(230, 57, 43, 0.12);
   border: 1px solid var(--accent);
   color: var(--accent);
   font-weight: 700;
@@ -375,7 +375,7 @@ body,
   flex: 3;
   position: relative;
   border-bottom: 1px solid var(--border);
-  background: radial-gradient(120% 100% at 50% 0%, #0d1219 0%, var(--bg) 70%);
+  background: radial-gradient(120% 100% at 50% 0%, #131009 0%, var(--bg) 70%);
 }
 .stream-panel {
   flex: 2;
@@ -438,7 +438,7 @@ body,
   width: 100%;
   height: 100%;
   border: 0;
-  background: #fafafa;
+  background: #0c0b09;
   display: block;
 }
 .opencode-state {
@@ -499,7 +499,7 @@ body,
   height: 7px;
   border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 8px rgba(89, 221, 166, 0.6);
+  box-shadow: 0 0 8px rgba(230, 57, 43, 0.6);
 }
 .stream-live {
   background: var(--info);
@@ -597,7 +597,7 @@ select:focus {
 .accent-btn {
   background: var(--accent);
   border: none;
-  color: #06211a;
+  color: #fff7f0;
   font-family: var(--sans);
   font-size: 11px;
   font-weight: 700;
@@ -707,7 +707,7 @@ select:focus {
   font-family: var(--mono);
   font-size: 10.5px;
   color: var(--accent);
-  background: rgba(89, 221, 166, 0.08);
+  background: rgba(230, 57, 43, 0.08);
   padding: 1px 4px;
   border-radius: 3px;
 }
@@ -749,7 +749,7 @@ select:focus {
 .chip.active {
   color: var(--accent);
   border-color: var(--accent);
-  background: rgba(89, 221, 166, 0.07);
+  background: rgba(230, 57, 43, 0.07);
 }
 
 .stream-list {
@@ -785,7 +785,7 @@ select:focus {
   background: rgba(255, 255, 255, 0.02);
 }
 .event-row.active {
-  background: rgba(89, 221, 166, 0.06);
+  background: rgba(230, 57, 43, 0.06);
   box-shadow: inset 2px 0 0 var(--accent);
 }
 .event-row.fail .event-subject {
@@ -808,7 +808,7 @@ select:focus {
   width: 30px;
   text-align: center;
 }
-.event-badge.agent { background: rgba(89, 221, 166, 0.14); color: var(--accent); }
+.event-badge.agent { background: rgba(230, 57, 43, 0.14); color: var(--accent); }
 .event-badge.tool { background: rgba(147, 199, 106, 0.12); color: #93c76a; }
 .event-badge.file { background: rgba(111, 157, 241, 0.12); color: #6f9df1; }
 .event-badge.system { background: rgba(139, 146, 157, 0.12); color: var(--muted); }
