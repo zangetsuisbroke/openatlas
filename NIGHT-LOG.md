@@ -136,16 +136,19 @@ Second independent audit of the MCP layer (distrust of round-1). Found + fixed:
 
 ## TERMINAL LATENCY — root cause fixed (2026-08-14)
 - User: "the terminal is so slow". Measured + fixed with the autonomous loop.
-- **BEFORE**: WS ping through the app showed **max 3442ms, seventeen 1.1s spikes** during
-  the boot scan. The knowledge-graph scan (`server/scan.ts` `scanNow()`) used sync
-  `readdirSync`/`statSync`, blocking the Bun event loop in ~500ms bursts for the full scan
-  (3.4–3.6s for 106 files on this box). Every keystroke, frame, and WS message froze
-  seconds at a time during boot/file-change/15s-refresh scans — the "slow terminal".
-- **FIX**: `server/scan.ts` → async `node:fs/promises` (`readdir`, `stat`) so stat calls go
-  through the thread pool. File reads already used `await Bun.file().text()`. Scan still
-  completes (106 files ≈ 2.8–3.6s) but never blocks the event loop.
-- **AFTER (same probe, during boot scan)**: ping **max 9ms, zero spikes >25ms**
-  (avg 2.0ms, was 130.8ms with spikes). Compiled-exe WS ping 2ms.
+- **BEFORE (clean A/B, same probe, ATLAS_WORKSPACE set)**: the knowledge-graph scan
+  (`server/scan.ts` `scanNow()`) used sync `readdirSync`/`statSync` per file. A 106-file
+  scan = 2277ms of **uninterrupted event-loop blocking** (`maybeYield` only fires every
+  200 files, and 106 < 200), so WS pings during boot scan hit **max 2282ms with 4 spikes**
+  (~2.3s of dead time). Every keystroke, output frame, and WS message froze seconds at a
+  time on boot and on every stale re-scan — that is the "slow terminal".
+- **FIX** (`66550bc`): `server/scan.ts` → async `node:fs/promises` (`readdir`, `stat`,
+  `readFile`) so stats run on the thread pool; the once-per-scan `execSync("git …")`
+  became async `execFile` (Bun lacks `node:child_process/promises`, so a small
+  promisified wrapper is used). No batching/coalescing changes needed.
+- **AFTER (same probe, same method)**: WS ping during boot scan **max 14ms, zero spikes**
+  (compiled exe: **max 5ms**). Bonus: the scan itself got ~10x faster — 2277ms → **238ms**
+  (source) / **214ms** (compiled exe) because async stat beats sync stat on this box.
 - Keystroke echo after fix ≈ 15–33ms. Remaining latency is native, not app:
   * Isolated node-pty test (no app in path, sparse single-char) = **20.6ms** — the
     Windows 10 1809 ConPTY/cmd cold-input floor.
@@ -155,9 +158,12 @@ Second independent audit of the MCP layer (distrust of round-1). Found + fixed:
     command round-trip 19ms; WS ping 0.5ms avg.
   * Conclusion: app adds no meaningful overhead; ~20ms of the residual is native ConPTY
     cold-input latency on this OS. The visible "slow terminal" was the scan freeze.
-- Supporting changes: `server/pty-host.mjs` — added `useConpty` env toggle
+- Supporting changes (`7b0d787`): `server/pty-host.mjs` — added `useConpty` env toggle
   (`ATLAS_PTY_USE_CONPTY=0` to force winpty) as a diagnostic knob; removed the
-  temporary `[prof]` instrumentation from the host.
-- Rebuilt `workspace/atlas-workspace.exe` (bun --compile) with the fix; check-clean gate
-  passed for bundle and exe. Desktop portable bundle rebuild: pending (vite UI rebuild
-  is separately broken — pre-existing html-inline-proxy error, unrelated to this fix).
+  temporary `[prof]` instrumentation from the host; `embedded-assets.ts` regenerated.
+- Shipped: `workspace/atlas-workspace.exe` rebuilt (bun --compile) with the fix and
+  verified (ping max 5ms, scan 214ms); check-clean gate passed for bundle and exe.
+  NOTE: desktop portable bundle (`desktop/dist/AtlasWorkspace 0.1.0.exe`) still embeds
+  the pre-fix server — rebuild via `cd desktop && npx electron-builder --win portable`
+  (electron-builder run was aborted; the vite UI rebuild is separately broken with a
+  pre-existing html-inline-proxy error unrelated to this fix).
