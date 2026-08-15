@@ -164,7 +164,7 @@ async function startServer() {
 
 function attach() {
   if (win && !win.isDestroyed() && port > 0) {
-    win.loadURL(`http://127.0.0.1:${port}`).catch((err) => {
+    win.loadURL(`http://127.0.0.1:${port}/index.html`).catch((err) => {
       console.error("[main] loadURL error:", err.message);
     });
   }
@@ -233,7 +233,7 @@ function createWindow() {
     if (port > 0) {
       setTimeout(() => {
         if (win && !win.isDestroyed()) {
-          win.loadURL(`http://127.0.0.1:${port}`).catch(() => {});
+          win.loadURL(`http://127.0.0.1:${port}/index.html`).catch(() => {});
         }
       }, 1000);
     }

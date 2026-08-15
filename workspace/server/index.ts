@@ -575,7 +575,13 @@ const server = Bun.serve<{ clientId: string }>({
         return r;
       });
     }
-    if (url.pathname === "/" || url.pathname === "/landing") {
+    if (url.pathname === "/") {
+      return serveStatic("/index.html").then((r) => {
+        done();
+        return r;
+      });
+    }
+    if (url.pathname === "/landing") {
       return serveStatic("/landing.html").then((r) => {
         done();
         return r;
