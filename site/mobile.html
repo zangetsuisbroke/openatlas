@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="description" content="OpenAtlas — local-first code intelligence. Live knowledge graph of your codebase, a local reasoning agent, real PTY terminals. Runs entirely on your machine." />
-<meta property="og:title" content="OpenAtlas — know your code while it's still moving" />
-<meta property="og:description" content="Live graph, local reasoning, real terminals. One process on your machine." />
+    <meta name="description" content="OpenAtlas — local-first code intelligence. Live knowledge graph, OpenCode reasoning agent. Runs entirely on your machine." />
+    <meta property="og:title" content="OpenAtlas — know your code while it's still moving" />
+    <meta property="og:description" content="Live graph, local reasoning agent. One process on your machine." />
 <meta name="theme-color" content="#0c0b09" />
 <title>OpenAtlas — know your code while it's still moving</title>
 <script>document.documentElement.classList.add('js');</script>
@@ -333,7 +333,7 @@
     <div class="term-shell rv">
       <div class="term-core" aria-label="live demo">
         <div class="term-bar">
-          <span class="t">atlas — terminal 01</span>
+          <span class="t">openatlas — opencode agent</span>
           <span class="dots"><i></i><i></i><i></i></span>
         </div>
         <div class="term-body" id="termOut"></div>
@@ -345,8 +345,7 @@
 <section class="dlstrip wrap">
   <div class="dlstrip-meta rv"><b>OPENATLAS v0.1.0</b> · windows 10/11 · x64 · <span class="r">free, fully local</span></div>
   <div class="dlstrip-btns rv">
-    <a class="btn btn-primary" href="https://github.com/zangetsuisbroke/atlas-workspace/releases/latest/download/atlas-workspace-0.1.0-win-x64-setup.exe">Setup <span class="arw" aria-hidden="true">↓</span></a>
-    <a class="btn btn-ghost" href="https://github.com/zangetsuisbroke/atlas-workspace/releases/latest/download/atlas-workspace-0.1.0-win-x64-portable.exe">Portable — no install <span class="arw" aria-hidden="true">↓</span></a>
+    <a class="btn btn-primary" href="https://github.com/zangetsuisbroke/openatlas/releases/latest/download/AtlasWorkspaceNew-0.1.0-win.zip">Download <span class="arw" aria-hidden="true">↓</span></a>
   </div>
 </section>
 
@@ -425,22 +424,23 @@
       </div>
     </article>
 
-    <article class="feat rv" id="terminal">
+    <article class="feat rv" id="agent">
       <div class="feat-top">
         <span class="idx">03</span>
-        <span class="lab">the shell</span>
+        <span class="lab">the agent</span>
       </div>
-      <div class="lab"><b>Terminal</b></div>
+      <div class="lab"><b>Agent</b></div>
       <p>
-        Full node-pty shells — cmd, PowerShell, bash. Keystrokes go <b>straight to the pty</b>;
-        no JSON round-trip between your fingers and the shell. Output streams through one
-        ordered channel at megabytes per second.
+        An OpenCode agent runs <b>entirely on your machine</b>, reading the live knowledge graph
+        and workspace files. Ask questions, run commands, refactor code — the agent sees the
+        same picture you do. No cloud, no API keys, no data leaves your disk.
       </p>
       <div class="art" aria-hidden="true">
         <div class="mono">
-          <div><span class="g">$</span> <span class="c">key →</span> pty.stdin <span class="g">· direct</span></div>
-          <div><span class="g">$</span> pty.stdout <span class="c">→</span> ws <span class="g">· batched</span></div>
-          <div><span class="g">$</span> 5.3 MB/s <span class="g">· 0.5ms ping</span></div>
+          <div><span class="g">> why is build slow?</span></div>
+          <div><span class="c">reading graph… 4 modules, 312 symbols</span></div>
+          <div>sync fs scan blocking event loop →</div>
+          <div><span class="c">done.</span> <span class="g">patched in 1.2s.</span></div>
         </div>
       </div>
     </article>
@@ -498,18 +498,11 @@
   </div>
   <div class="dl-grid">
     <div class="dl-card rv">
-      <span class="k">Installer — recommended</span>
-      <h3>OpenAtlas Setup</h3>
-      <p>Installs the app, adds a Start-menu entry and desktop shortcut. One-click, per-user, no admin. Auto-launches when done.</p>
-      <div class="spec">atlas-workspace-0.1.0-win-x64-setup.exe</div>
-      <a class="btn btn-primary" href="https://github.com/zangetsuisbroke/atlas-workspace/releases/latest/download/atlas-workspace-0.1.0-win-x64-setup.exe">Download setup <span class="arw" aria-hidden="true">↓</span></a>
-    </div>
-    <div class="dl-card rv">
-      <span class="k">Portable — no install</span>
-      <h3>OpenAtlas Portable</h3>
-      <p>Single self-contained exe. Run it from any folder or USB stick; nothing is written outside the app's directory.</p>
-      <div class="spec">atlas-workspace-0.1.0-win-x64-portable.exe</div>
-      <a class="btn btn-ghost" href="https://github.com/zangetsuisbroke/atlas-workspace/releases/latest/download/atlas-workspace-0.1.0-win-x64-portable.exe">Download portable <span class="arw" aria-hidden="true">↓</span></a>
+      <span class="k">Windows x64 — zip</span>
+      <h3>Atlas Workspace</h3>
+      <p>Extract the zip and run AtlasWorkspaceNew.exe. No installer needed — runs from any folder.</p>
+      <div class="spec">AtlasWorkspaceNew-0.1.0-win.zip</div>
+      <a class="btn btn-primary" href="https://github.com/zangetsuisbroke/openatlas/releases/latest/download/AtlasWorkspaceNew-0.1.0-win.zip">Download <span class="arw" aria-hidden="true">↓</span></a>
     </div>
   </div>
   <p class="dl-note rv">
@@ -522,7 +515,7 @@
   <div class="in rv">
     <h2>It's a workspace. <span class="red">Make it yours.</span></h2>
     <p>Download the app and point it at any folder. The graph builds itself while you type.</p>
-    <a class="btn btn-primary" href="https://github.com/zangetsuisbroke/atlas-workspace/releases/latest/download/atlas-workspace-0.1.0-win-x64-setup.exe">Download for Windows <span class="arw" aria-hidden="true">→</span></a>
+    <a class="btn btn-primary" href="https://github.com/zangetsuisbroke/openatlas/releases/latest/download/AtlasWorkspaceNew-0.1.0-win.zip">Download for Windows <span class="arw" aria-hidden="true">→</span></a>
   </div>
 </section>
 
@@ -535,7 +528,7 @@
     <div class="foot-links">
       <a href="#graph">graph</a>
       <a href="#reason">reason</a>
-      <a href="#terminal">terminal</a>
+      <a href="#agent">agent</a>
       <a href="#download">download</a>
     </div>
     <div class="foot-clock" id="clock">— — — —</div>
@@ -545,14 +538,14 @@
 <script>
   var term = document.getElementById("termOut");
   var lines = [
-    ['<span class="p">$</span> <span class="o">atlas scan --live</span>', 500],
-    ['<span class="d">reindex 106 files · 4 modules · 312 symbols</span>', 900],
-    ['<span class="d">graph warm · last write 41ms ago</span>', 900],
-    ['<span class="p">$</span> <span class="o">ask "why does build feel slow?"</span>', 500],
-    ['<span class="d">reading working tree… local model…</span>', 1400],
-    ['<span class="c">took 1.2s — event-loop blocked by sync scan.</span> <span class="ok">patched.</span>', 1100],
-    ['<span class="p">$</span> <span class="o">ping</span>', 600],
-    ['<span class="ok">0.5ms · zero spikes</span>', 400]
+    ['<span class="p">$</span> <span class="o">opencode serve --live</span>', 500],
+    ['<span class="d">knowledge graph warm · 106 nodes · 4 modules</span>', 900],
+    ['<span class="d">agent reasoning over live workspace…</span>', 900],
+    ['<span class="p">></span> <span class="o">why does build feel slow?</span>', 500],
+    ['<span class="d">reading graph… local model…</span>', 1400],
+    ['<span class="c">sync scan blocked event loop 2.3s.</span> <span class="ok">patched.</span>', 1100],
+    ['<span class="p">></span> <span class="o">refactor scan to async</span>', 600],
+    ['<span class="ok">done · 238ms · zero freeze</span>', 400]
   ];
   var li = 0;
   function nextLine() {
