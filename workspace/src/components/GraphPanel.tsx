@@ -25,13 +25,13 @@ export default function GraphPanel() {
 
   const { nodes, links } = useMemo(() => {
     const { nodes, links } = store.graphSnapshot();
-    const filteredNodes = filter === "all" ? nodes : nodes.filter((n) => n.type === filter);
+    const filteredNodes = nodes.filter((n) => n.type !== "file" && n.type !== "folder");
     const ids = new Set(filteredNodes.map((n) => n.id));
     return {
       nodes: filteredNodes,
       links: links.filter((l) => ids.has(l.source as string) && ids.has(l.target as string)),
     };
-  }, [graphVersion, filter]);
+  }, [graphVersion]);
 
   useEffect(() => {
     graphBridge.focusNode = (id: string) => {
@@ -47,7 +47,10 @@ export default function GraphPanel() {
 
   const typeCounts = useMemo(() => {
     const m = new Map<string, number>();
-    for (const n of store.nodes.values()) m.set(n.type, (m.get(n.type) ?? 0) + 1);
+    for (const n of store.nodes.values()) {
+      if (n.type === "file" || n.type === "folder") continue;
+      m.set(n.type, (m.get(n.type) ?? 0) + 1);
+    }
     return m;
   }, [graphVersion]);
 

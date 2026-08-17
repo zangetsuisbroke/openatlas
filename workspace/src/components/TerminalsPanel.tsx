@@ -116,9 +116,14 @@ function TermPane({ id, title }: { id: string; title: string }) {
     }
 
     const disp = term.onData((data) => termInput(id, data));
-    term.focus();
+    const focusTerm = () => term.focus();
+    focusTerm();
+    const raf = requestAnimationFrame(focusTerm);
+    host.addEventListener("pointerdown", focusTerm);
 
     return () => {
+      cancelAnimationFrame(raf);
+      host.removeEventListener("pointerdown", focusTerm);
       disp.dispose();
       ro.disconnect();
       unsub();

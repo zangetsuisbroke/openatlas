@@ -348,7 +348,7 @@
 
 <div class="ticker" aria-hidden="true">
   <div class="ticker-track" id="ticker">
-    <span>FILE GRAPHS<i>◆</i>LOCAL REASONING<i>◆</i>REAL PTY TERMINALS<i>◆</i>ZERO TELEMETRY<i>◆</i>ONE EVENT STREAM<i>◆</i>RUNS ENTIRELY ON YOUR MACHINE<i>◆</i>WINDOWS 10 / 11<i>◆</i></span>
+    <span>FILE GRAPHS<i>◆</i>LOCAL REASONING<i>◆</i>OPENCODE AGENT<i>◆</i>ZERO TELEMETRY<i>◆</i>ONE EVENT STREAM<i>◆</i>RUNS ENTIRELY ON YOUR MACHINE<i>◆</i>WINDOWS 10 / 11<i>◆</i></span>
   </div>
 </div>
 
@@ -361,7 +361,7 @@
     <div class="nav-links">
       <a href="#graph">graph</a>
       <a href="#reason">reason</a>
-      <a href="#terminal">terminal</a>
+      <a href="#agent">agent</a>
       <a href="#download">download</a>
     </div>
     <a class="nav-cta" href="#download">Download →</a>
@@ -385,12 +385,12 @@
       </p>
       <div class="hero-cta rv">
         <a class="btn btn-primary" href="#download">Download for Windows <span class="arw">→</span></a>
-        <a class="btn btn-ghost" href="#graph">See how it thinks</a>
+        <a class="btn btn-ghost" href="#agent">Meet the agent</a>
       </div>
       <div class="hero-meta rv">
         <div><b>LIVE GRAPH</b><span class="md">updates as you edit</span></div>
         <div><b>LOCAL AGENT</b><span class="md">reads the working tree</span></div>
-        <div><b>REAL PTY</b><span class="md">cmd / powershell / bash</span></div>
+        <div><b>OPENCODE</b><span class="md">local reasoning agent</span></div>
       </div>
     </div>
 
@@ -398,13 +398,13 @@
       <div class="term">
         <div class="term-glow"></div>
         <div class="term-bar">
-          <span class="t">atlas — terminal 01</span>
+          <span class="t">openatlas — opencode agent</span>
           <span class="dots"><i></i><i></i><i></i></span>
         </div>
         <div class="term-body" id="termOut">
-          <div><span class="p">$</span> <span class="o">atlas scan --live</span></div>
-          <div><span class="d">reindex 106 files · 4 modules · 312 symbols</span></div>
-          <div><span class="d">graph warm · last write 41ms ago</span></div>
+          <div><span class="p">$</span> <span class="o">opencode serve --live</span></div>
+          <div><span class="d">knowledge graph warm · 106 nodes · 4 modules</span></div>
+          <div><span class="d">agent reasoning over live workspace…</span></div>
         </div>
       </div>
     </div>
@@ -495,19 +495,20 @@
     </div>
   </article>
 
-  <article class="feat" id="terminal">
+  <article class="feat" id="agent">
     <div class="idx rv">03</div>
-    <div class="lab rv"><b>Terminal</b>real shells, zero echo lag</div>
+    <div class="lab rv"><b>Agent</b>local reasoning over your code</div>
     <p class="rv">
-      Full node-pty shells — cmd, PowerShell, bash. Keystrokes go <b>straight to the pty</b>;
-      no JSON round-trip between your fingers and the shell. Output streams through one
-      ordered channel at megabytes per second.
+      An OpenCode agent runs <b>entirely on your machine</b>, reading the live knowledge graph
+      and workspace files. Ask questions, run commands, refactor code — the agent sees the
+      same picture you do. No cloud, no API keys, no data leaves your disk.
     </p>
     <div class="art rv" aria-hidden="true">
       <div class="mono">
-        <div><span class="g">$</span> <span class="c">key →</span> pty.stdin <span class="g">· direct</span></div>
-        <div><span class="g">$</span> pty.stdout <span class="c">→</span> ws <span class="g">· batched</span></div>
-        <div><span class="g">$</span> 5.3 MB/s <span class="g">· 0.5ms ping</span></div>
+        <div><span class="g">> why is build slow?</span></div>
+        <div><span class="c">reading graph… 4 modules, 312 symbols</span></div>
+        <div>sync fs scan blocking event loop →</div>
+        <div><span class="c">done.</span> <span class="g">patched in 1.2s.</span></div>
       </div>
     </div>
   </article>
@@ -599,7 +600,7 @@
     <div class="foot-links">
       <a href="#graph">graph</a>
       <a href="#reason">reason</a>
-      <a href="#terminal">terminal</a>
+      <a href="#agent">agent</a>
       <a href="#download">download</a>
     </div>
     <div class="foot-clock" id="clock">— — — —</div>
@@ -612,14 +613,14 @@
 
   var term = document.getElementById("termOut");
   var lines = [
-    ['<span class="p">$</span> <span class="o">atlas scan --live</span>', 500],
-    ['<span class="d">reindex 106 files · 4 modules · 312 symbols</span>', 900],
-    ['<span class="d">graph warm · last write 41ms ago</span>', 900],
-    ['<span class="p">$</span> <span class="o">ask "why does build feel slow?"</span>', 500],
-    ['<span class="d">reading working tree… local model…</span>', 1400],
-    ['<span class="c">took 1.2s — event-loop blocked by sync scan.</span> <span class="ok">patched.</span>', 1100],
-    ['<span class="p">$</span> <span class="o">ping</span>', 600],
-    ['<span class="ok">0.5ms · zero spikes</span>', 400]
+    ['<span class="p">$</span> <span class="o">opencode serve --live</span>', 500],
+    ['<span class="d">knowledge graph warm · 106 nodes · 4 modules</span>', 900],
+    ['<span class="d">agent reasoning over live workspace…</span>', 900],
+    ['<span class="p">></span> <span class="o">why does build feel slow?</span>', 500],
+    ['<span class="d">reading graph… local model…</span>', 1400],
+    ['<span class="c">sync scan blocked event loop 2.3s.</span> <span class="ok">patched.</span>', 1100],
+    ['<span class="p">></span> <span class="o">refactor scan to async</span>', 600],
+    ['<span class="ok">done · 238ms · zero freeze</span>', 400]
   ];
   var li = 0;
   function nextLine() {

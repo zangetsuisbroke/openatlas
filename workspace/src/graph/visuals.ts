@@ -3,6 +3,7 @@ import type { GNode, NodeType, Relation } from "../types";
 export type ShapeKind =
   | "circle"
   | "square"
+  | "box"
   | "diamond"
   | "hex"
   | "pill"
@@ -10,8 +11,8 @@ export type ShapeKind =
   | "tri-down";
 
 export const NODE_STYLE: Record<NodeType, { color: string; shape: ShapeKind }> = {
-  file: { color: "#6f9df1", shape: "square" },
-  folder: { color: "#8b929d", shape: "square" },
+  file: { color: "#6f9df1", shape: "pill" },
+  folder: { color: "#8b929d", shape: "box" },
   branch: { color: "#d9b268", shape: "pill" },
   package: { color: "#8adfd7", shape: "hex" },
   concept: { color: "#6cc8e0", shape: "circle" },
@@ -52,6 +53,9 @@ export function drawShape(ctx: CanvasRenderingContext2D, shape: ShapeKind, x: nu
   switch (shape) {
     case "square":
       ctx.rect(x - r * 0.75, y - r * 0.75, r * 1.5, r * 1.5);
+      break;
+    case "box":
+      ctx.rect(x - r * 0.85, y - r * 0.85, r * 1.7, r * 1.7);
       break;
     case "diamond":
       ctx.moveTo(x, y - r * 1.1);

@@ -72,8 +72,8 @@ function killTree(proc: ChildProcess): void {
 }
 
 export async function start(): Promise<OpenCodeServeStatus> {
-  if (active) return status();
   if (startPromise) return startPromise;
+  if (active) return status();
   startPromise = doStart().finally(() => {
     startPromise = null;
   });

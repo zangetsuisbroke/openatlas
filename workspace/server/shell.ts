@@ -60,11 +60,9 @@ const { HOST_SCRIPT, NODE_PTY_INDEX } = (() => {
   if (!host && embedded && embedded["__internal/pty-host.mjs"]) {
     mkdirSync(iso, { recursive: true });
     const out = join(iso, "pty-host.mjs");
-    if (!existsSync(out)) {
-      const raw = embedded["__internal/pty-host.mjs"];
-      writeFileSync(out, raw.startsWith("data:") ? Buffer.from(raw.split(",")[1], "base64") : Buffer.from(raw));
-      log.info("pty", `extracted pty-host.mjs -> ${out}`);
-    }
+    const raw = embedded["__internal/pty-host.mjs"];
+    writeFileSync(out, raw.startsWith("data:") ? Buffer.from(raw.split(",")[1], "base64") : Buffer.from(raw));
+    log.info("pty", `extracted pty-host.mjs -> ${out}`);
     host = out;
   }
 

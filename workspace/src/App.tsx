@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import TopBar, { type LayoutMode } from "./components/TopBar";
 import GraphPanel from "./components/GraphPanel";
 import EventStream from "./components/EventStream";
-import TerminalsPanel from "./components/TerminalsPanel";
 import OpenCodePanel from "./components/OpenCodePanel";
 import { connect } from "./ws";
 
@@ -42,7 +41,7 @@ export default function App() {
             <EventStream />
           </div>
           <div className="col-right">
-            <TerminalsPanel />
+            <OpenCodePanel />
           </div>
         </div>
       )}
@@ -52,11 +51,6 @@ export default function App() {
             <GraphPanel />
             <EventStream />
           </div>
-        </div>
-      )}
-      {layout === "terminal" && (
-        <div className="main term-max">
-          <TerminalsPanel />
         </div>
       )}
       {layout === "opencode" && (

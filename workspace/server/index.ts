@@ -395,15 +395,6 @@ const termManager = new TerminalManager({
   },
 });
 
-// ---------- ambient ticker ----------
-const ambientTopics = ["session graph", "rate-limit config", "refresh flow", "cache policy", "middleware order"];
-setInterval(() => {
-  if (Math.random() < 0.45) {
-    const topic = ambientTopics[Math.floor(Math.random() * ambientTopics.length)];
-    pushEvent({ channel: "agent", kind: "agent.thinking", subject: topic, status: "info", nodeId: "a:atlas" });
-  }
-}, 9000);
-
 // ---------- static serving ----------
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -558,6 +549,37 @@ const server = Bun.serve<{ clientId: string }>({
         done();
         return json(st);
       });
+    }
+    if (url.pathname === "/api/opencode/session" && req.method === "POST") {
+      return ocServe
+        .start()
+        .then(async (st) => {
+          if (!st.running || !st.url) {
+            done();
+            return json({ ok: false, error: st.error || "serve not running" });
+          }
+          try {
+            const r = await fetch(`${st.url}/session`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: "{}",
+            });
+            const body = (await r.json().catch(() => ({}))) as { id?: string; path?: string };
+            if (!r.ok || !body.id) {
+              done();
+              return json({ ok: false, error: `opencode create session failed (${r.status})` });
+            }
+            done();
+            return json({
+              ok: true,
+              id: body.id,
+              url: `${st.url}/${body.path ?? "workspace"}/session/${body.id}`,
+            });
+          } catch (e) {
+            done();
+            return json({ ok: false, error: String(e) });
+          }
+        });
     }
     if (url.pathname === "/api/opencode/status") {
       done();

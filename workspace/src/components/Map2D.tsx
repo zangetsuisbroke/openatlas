@@ -50,6 +50,7 @@ interface View {
 const MIN_K = 0.15;
 const MAX_K = 4.5;
 const PULSE_MS = 900;
+const SIM_CAP = 2500;
 
 const TYPE_CLUSTERS: Record<string, { x: number; y: number }> = {
   agent: { x: 0, y: 0 },
@@ -139,6 +140,7 @@ const Map2D = forwardRef<Map2DHandle, Props>(function Map2D({ nodes, links, puls
     const existing = new Map(nodesRef.current.map((n) => [n.id, n]));
     const next: SimNode[] = [];
     for (const n of nodes) {
+      if (n.type === "file" || n.type === "folder") continue;
       const prev = existing.get(n.id);
       if (prev) {
         prev.label = n.label;
@@ -156,9 +158,19 @@ const Map2D = forwardRef<Map2DHandle, Props>(function Map2D({ nodes, links, puls
     linksRef.current = links
       .filter((l) => ids.has(String(l.source)) && ids.has(String(l.target)))
       .map((l) => ({ source: String(l.source), target: String(l.target), relation: l.relation }));
-    sim.nodes(next);
-    (sim.force("link") as ReturnType<typeof forceLink>).links(linksRef.current as any);
-    sim.alpha(0.5);
+    if (next.length > SIM_CAP) {
+      // Huge graphs (e.g. a home-directory workspace with thousands of files):
+      // a full d3-force pass would freeze the main thread for seconds on every
+      // refresh. Keep the static seed-by-type layout instead of simulating.
+      sim.alpha(0);
+      sim.stop();
+      sim.nodes([]);
+      (sim.force("link") as ReturnType<typeof forceLink>).links([]);
+    } else {
+      sim.nodes(next);
+      (sim.force("link") as ReturnType<typeof forceLink>).links(linksRef.current as any);
+      sim.alpha(0.5);
+    }
     onStats({ nodes: next.length, links: linksRef.current.length });
     wakeRef.current?.();
     if (!fittedRef.current && next.length > 0 && sizeRef.current.w > 0) {
@@ -212,12 +224,24 @@ const Map2D = forwardRef<Map2DHandle, Props>(function Map2D({ nodes, links, puls
 
       const byId = new Map(nodesRef.current.map((n) => [n.id, n]));
 
+      const inv = 1 / view.k;
+      const cx = -view.x * inv;
+      const cy = -view.y * inv;
+      const halfW = cssW / 2 * inv + 12;
+      const halfH = cssH / 2 * inv + 12;
+      const minGx = cx - halfW, maxGx = cx + halfW;
+      const minGy = cy - halfH, maxGy = cy + halfH;
+      const lod = 0.55 * inv;
+
       // links
-      ctx.lineWidth = 1 / view.k;
+      ctx.lineWidth = inv;
       for (const l of linksRef.current) {
         const s = typeof l.source === "string" ? byId.get(l.source) : l.source;
         const t = typeof l.target === "string" ? byId.get(l.target) : l.target;
         if (!s || !t) continue;
+        if (s.type === "file" || s.type === "folder" || t.type === "file" || t.type === "folder") continue;
+        if ((s.x < minGx && t.x < minGx) || (s.x > maxGx && t.x > maxGx) || (s.y < minGy && t.y < minGy) || (s.y > maxGy && t.y > maxGy)) continue;
+        if (Math.max(Math.abs(t.x - s.x), Math.abs(t.y - s.y)) < lod) continue;
         ctx.strokeStyle = LINK_STYLE[l.relation as keyof typeof LINK_STYLE] ?? "#4d5560";
         ctx.globalAlpha = 0.26;
         ctx.beginPath();
@@ -229,8 +253,11 @@ const Map2D = forwardRef<Map2DHandle, Props>(function Map2D({ nodes, links, puls
 
       // nodes
       for (const n of nodesRef.current) {
+        if (n.type === "file" || n.type === "folder") continue;
+        if (n.x < minGx || n.x > maxGx || n.y < minGy || n.y > maxGy) continue;
         const isHover = n.id === hoverRef.current;
         const r = nodeRadius(n, isHover);
+        if (!isHover && r * view.k < 0.45) continue;
         const color = nodeColor(n.type);
         const shape = NODE_STYLE[n.type]?.shape ?? "circle";
         const p = pulsesRef.current.get(n.id);
@@ -253,7 +280,13 @@ const Map2D = forwardRef<Map2DHandle, Props>(function Map2D({ nodes, links, puls
         ctx.fillStyle = color;
         ctx.globalAlpha = 0.94;
         drawShape(ctx, shape, n.x, n.y, r);
-        ctx.fill();
+        if (shape === "box") {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = Math.max(1, 1.2 / view.k);
+          ctx.stroke();
+        } else {
+          ctx.fill();
+        }
         ctx.shadowBlur = 0;
         ctx.globalAlpha = 1;
 

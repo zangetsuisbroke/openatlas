@@ -204,3 +204,150 @@ Second independent audit of the MCP layer (distrust of round-1). Found + fixed:
   - Release **v0.1.0** with `atlas-workspace-0.1.0-win-x64-setup.exe` (160,142,207 B) and
     `...-portable.exe` (159,976,603 B); download URLs verified 302→asset.
 - Site "Download" buttons point at `github.com/zangetsuisbroke/atlas-workspace/releases/latest/download/...`.
+
+## PACKAGED TERMINAL — FINAL DEBUG (2026-08-15)
+- **Mystery: portable extraction missing `resources/vendor`.** Forensics: the 7z archive
+  embedded in the portable exe is 100% intact (`7za t` → 363 files, "Everything is Ok");
+  extracting it manually yields the FULL tree incl. `resources/vendor/{node-pty,opencode}`.
+  So packaging (extraResources in `desktop/package.json`) is correct.
+- **Root cause = double-launch of the portable.** Each portable run does
+  `RMDir /r $INSTDIR` then re-extracts. If a previous instance is STILL RUNNING, the
+  second SFX's `RMDir` only deletes files that aren't memory-locked: everything non-essential
+  (vendor/, LICENSES, extra locales, vulkan dlls, elevate.exe) gets wiped while boot-critical
+  files survive → app keeps running from a 14-file shell. Reproduced live: first launch →
+  363 files complete; relaunch while running → nuked to 14. Extracted file mtimes (12:33)
+  + SFX/Electron start times (12:50) matched this exactly.
+  **Guidance: never launch the portable while an instance is already running.**
+- **Latent bug fixed (`shell.ts`):** the `.atlas/pty-host.mjs` extraction was guarded by
+  `if (!existsSync(out))`, so a stale copy from an older build (Aug 10, missing the
+  `ATLAS_NODE_PTY` file:// fix, `ATLAS_PTY_USE_CONPTY` override, and 350MB leak-restart
+  guard) shadowed the embedded current host forever. Now the embedded copy is ALWAYS
+  (re)written on server start → old machines get current host fixes automatically.
+- **Verified end-to-end on the fresh build (13:27):**
+  - New portable extracts 363 files; `.atlas/pty-host.mjs` auto-refreshed (mtime = start time).
+  - `winpty-agent.exe` now runs from `resources\vendor\node-pty\prebuilds\win32-x64\`
+    (SHIPPED node-pty via `ATLAS_NODE_PTY` + file:// fix) — not the stale `.atlas/vendor`.
+  - WS echo test PASS (create → cmd banner → echo).
+  - Real-browser UI loop proven: typed `echo UI_OK_7788 > C:\...\ui-proof.txt` into the
+    xterm → file created with content → input → WS → pty-host → node-pty → winpty → cmd.
+- Rebuilt: `workspace/atlas-workspace.exe` (bun run exe, check-clean passed) + desktop
+  `npm run dist` (nsis + portable). Fresh portable = `desktop/dist/AtlasWorkspace 0.1.0.exe`.
+
+## REAL-WINDOW CDP VERIFICATION (2026-08-15, ~13:46–13:58)
+
+User reported "the current build still doesnt take my input." Attached CDP to the ACTUAL
+Electron window (`AtlasWorkspace 0.1.0.exe --remote-debugging-port=9222`) and drove it like
+a real user:
+- **Focus after "+ New Terminal" is CORRECT** — even with a REAL mouse click on the button,
+  `document.activeElement` = `TEXTAREA.xterm-helper-textarea` (aria "Terminal input").
+  `term.focus()` in `TerminalsPanel.tsx:119` works.
+- **Input flows end-to-end**: dispatched real key events → `term:input` WS messages observed
+  → server → pty-host → SHIPPED node-pty → winpty → cmd.exe.
+- **Output flows back**: monitor WS client received `term:data` echoing `SCREEN_E2E_999` +
+  prompt `C:\Users\admin\AppData\Roaming\atlas-workspace-desktop\app>` → full loop works in
+  the real window.
+- **First CDP typing attempt appeared "garbage"** (`\x1b[2~` Insert + `\x1b[3~` Delete in the
+  stream) — root-caused to a BUG IN MY TEST HARNESS: `windowsVirtualKeyCode` 45/46 collide
+  with VK_INSERT/VK_DELETE for `-` and `.`. NOT an app bug.
+- **3 stale-looking "cmd.exe" tabs** seen right after launch were the USER's own test
+  terminals (they are actively clicking around) — server had no persistence; only one
+  instance was ever running; no Setup-installed copy exists; localStorage empty.
+- Conclusion: the fresh 13:27 build WORKS in the real Electron window. The user's complaint
+  predates them having tested the new build (no app process was running at 13:40).
+- Cleaned up: killed test instance + orphaned pty shells, removed both stale extraction
+  dirs (`3HwS3XgI4TDUmtKci0fUJYde1gH`, `3HwYWeOr0kMPATnr5Ur2U5VmuNy`). Machine left pristine.
+- Test helper: `C:\Users\admin\AppData\Local\Temp\opencode\cdp-test.mjs` (needs `ws` pkg —
+  `npm i ws` in that dir).
+
+## "1 AGENT THINKING" FIX + VERIFICATION (2026-08-15, ~14:00–14:50)
+
+**Symptom (user):** on fresh launch, UI shows `1 agent thinking` / AGENT filter chip = 1
+before any terminal is opened; user worried an agent auto-launched and blocked the app.
+
+**Root cause:** NOT a real agent. `workspace/server/index.ts` had an "ambient ticker":
+`setInterval` every 9000 ms with 45% chance pushed a fake `agent.thinking` event (topics:
+"session graph", "rate-limit config", "refresh flow", "cache policy", "middleware order").
+`boot()` is only a `log.time` timing wrapper; opencode-serve is lazy (first request to
+`/api/opencode/start`). No agent launches by default.
+
+**Confirmation:** launched an isolated copy of the user's running build
+(`--remote-debugging-port=9223 --user-data-dir=<fresh>`), dumped `document.body.innerText`
+via CDP → `14:20:54 agt · agent.thinking "cache policy"`, AGENT chip count 1.
+
+**Fix:** removed the ambient ticker block from `workspace/server/index.ts` (was lines
+398-405). Remaining `agent.thinking` events are all REACTIVE to real terminal commands
+(python/node/bunx → "parsing output"; generic cmd → "indexing output") or inside the
+`atlas demo` sequence. `refreshScan` setInterval(15s) is a real workspace-file graph scan
+(no events, only runs when `stale()`).
+
+**Rebuild:** `bun run exe` in `workspace/` (vite OK, 14 embedded files → embedded-assets.ts,
+vendor opencode 1.18.18 + node-pty, check-clean + check-exe OK, atlas-workspace.exe OK).
+
+**Desktop dist (had to dodge a lock):** `npm run dist` / `npx electron-builder --win portable`
+stalled twice at "output file is locked for writing => waiting for unlock" because the
+user's RUNNING instance IS the SFX `dist\AtlasWorkspace 0.1.0.exe` → Windows locks that
+file. Worked around by building with `--config.productName=AtlasWorkspaceNew` →
+**`desktop\dist\AtlasWorkspaceNew 0.1.0.exe`** (143 MB). NOTE: the old SFX file is still
+locked by the user's running instance; renaming the new file to the canonical name must
+wait until the user closes the app.
+
+**Runtime verification (new build):** launched `dist\win-unpacked\AtlasWorkspaceNew.exe`
+with `--remote-debugging-port=9224 --user-data-dir=<fresh>`, dumped body text:
+EVENT STREAM = **0 events**, AGENT chip = **0**, **no `agent.thinking`** anywhere.
+(The `agent 1` in the KNOWLEDGE GRAPH legend is just the seeded `a:atlas` graph node
+count — unrelated to the event stream, pre-existing, harmless.)
+
+**Cleanup:** killed both test instances (9223, 9224), removed `atlas-inspect`,
+`atlas-inspect-profile`, `atlas-fix-check` temp dirs. User's running instance (PID 5404
+SFX + extracted processes in `3HwYWeOr0kMPATnr5Ur2U5VmuNy`) untouched.
+
+## 2026-08-16 — "empty terminal + keystrokes ignored" root cause + fix
+
+**User report:** with the home-dir workspace (`C:\Users\admin`), terminals "cant take input or dont load" — empty, no working dir, keystrokes ignored.
+
+**E1/E2 experiments (win-unpacked + CDP, port per instance):**
+- Home workspace scan: **4057 files / 2662 folders → ~6700 graph nodes**; first scan 11 s, refreshes 4–5 s every ~45 s (async, server stays responsive).
+- E1 (fresh profile): terminal = real cmd.exe pty, banner+prompt render, `echo` works once UI is up.
+- E2 (users REAL profile): terminal created, banner rendered (43k px), textarea focused — but **keystrokes produced ZERO ws frames** (CDP Network capture) until a **real mouse click into the terminal body** → then `term:input` flows and echo returns. Programmatic `term.focus()` alone does NOT activate xterm input when the window isnt OS-focused.
+- **Main-thread freeze (the "empty" cause):** Map2D force sim re-runs (~204 d3-force ticks) on EVERY graph refresh broadcast. With 6700 nodes this pegged the renderer for seconds (CDP /json took 8–12 s to answer; "+ New Terminal" button appeared only after a variable 4–15 s). During those freezes the terminal canvas never paints (looks empty) and input is dropped.
+
+**Fix (`workspace/src/components/Map2D.tsx`):**
+- `SIM_CAP = 2500`: graphs larger than that skip the force simulation entirely (seed-by-type layout, `sim.alpha(0)`/stop) — kills the 45 s refresh freeze.
+- Viewport culling + LOD in `draw()`: skip off-screen nodes/links and sub-pixel (radius·k < 0.45) nodes.
+
+**Fix (`workspace/src/components/TerminalsPanel.tsx`):** TermPane re-focuses the xterm on mount (rAF) and on `pointerdown` on the host.
+
+**Verified on the REAL profile (new build):** button at **+1.5 s** (was 4–15 s); **no freeze on graph refresh** (worst measured gap 101 ms vs multi-second before); terminal banner paints (52k px); `echo VFY_MARK_1` executed and echoed. Portable `AtlasWorkspaceNew 0.1.0.exe` smoke-tested (SFX extract ~30 s, then button +1.3 s, terminal painted).
+
+**Deliverable:** `D:\ggggggggggg\OpenAtlas\desktop\dist\AtlasWorkspaceNew 0.1.0.exe` (Aug 16, 143,072,692 bytes). Temp profiles cleaned up.
+
+## 2026-08-16 (later) — terminals replaced with the OpenCode web UI
+
+**Request:** replace the raw terminal panel with the web opencode agent UI.
+
+**Changes (`workspace/src`):**
+- `App.tsx`: right column + max layout now render `OpenCodePanel` (iframe of `opencode serve`, lazily started on 127.0.0.1:4099) instead of `TerminalsPanel`; dropped the separate `terminal` layout mode.
+- `TopBar.tsx`: `LayoutMode` is now `split | graph | opencode`; "+ New Terminal" → "+ New Chat" (switches to the opencode layout); removed "spawn terminal" from profile menu; cycle order = split → opencode → graph.
+- `TerminalsPanel.tsx` left in place but unused (xterm + addons tree-shaken — bundle dropped 570 KB → 182 KB). Server pty engine untouched.
+
+**Verified (real profile, win-unpacked, CDP):** no `.term-host` elements; exactly one `iframe.opencode-frame` pointing at `http://127.0.0.1:4099/` (serve returns HTTP 200, opencode HTML); top bar = "+ New Chat / ≡ Layout / ⌘ OpenCode / ⚙ / ◎".
+
+**Deliverable:** `D:\ggggggggggg\OpenAtlas\desktop\dist\AtlasWorkspaceNew 0.1.0.exe` (Aug 16, 142,962,879 B).
+
+## 2026-08-16 (later) — tiling for the OpenCode panel + session deep-links
+
+**Request:** bring back the tiling mechanic (stacked/split + multiple items) that the old terminals panel had, for the OpenCode panel. Also answered why graph file/folder nodes look "sushi shaped" (they are plain filled squares — `graph/visuals.ts` NODE_STYLE, file `#6f9df1` / folder `#8b929d` square, ~7 px).
+
+**Findings / design:**
+- The opencode web SPA deep-links sessions via `/<path>/session/<id>` (route `path:"/:dir/session/:id"` confirmed in its bundle); `POST /session` (JSON `{}`) creates a chat and returns `{ id, path }`. So ONE `opencode serve` instance can back multiple tiled iframes, each a different chat — no extra serve processes needed.
+
+**Changes (`workspace/server`, `workspace/src`):**
+- `server/index.ts`: new `POST /api/opencode/session` — ensures serve started, POSTs `{}` to `<serve>/session`, returns `{ ok, id, url: <serve>/<path>/session/<id> }`.
+- `server/opencode-serve.ts`: **race fix** in `start()` — previously `if (active) return status()` returned a URL before the serve was listening (`active` is set right after spawn, ~6 s before ready), so concurrent callers got a dead URL. Now an in-flight `startPromise` is always awaited; a "ready" URL is only returned once the readiness loop completes.
+- `src/components/OpenCodePanel.tsx`: rewritten for tiling — module-level tile store + layout (survive layout switches / remounts), `useSyncExternalStore`. Panel header: title with tile count, **stacked|split chip toggle**, "+ New Chat". Each tile = `.oc-tile` with a head (↗ open-in-tab, × close; last tile can't be removed) + the session iframe. Exports `newChat()` used by the top bar. First tile stays at serve root (shows the thread list).
+- `src/components/TopBar.tsx`: "+ New Chat" now calls `newChat()` AND switches to the opencode layout.
+- `src/styles.css`: `.oc-tiles` (+ `.split` = row) and `.oc-tile` / `.oc-tile-head` / `.oc-tile-body` mirroring the old `term-canvases`/`term-pane`/`term-tab` tiling.
+
+**Verified (real profile, win-unpacked, CDP harness `tile-verify.cjs`):** 1 tile at serve root → top-bar "+ New Chat" → 2nd tile with a live session URL `http://127.0.0.1:4099/<data-dir>/app/session/ses_…` (HTTP 200, SPA); the session deep-link renders the opencode chat view in a real browser (Playwright: title OpenCode, "Home" pressed, "New session" present); chip toggles `oc-tiles stack ↔ split` and back.
+
+**Deliverable:** `D:\ggggggggggg\OpenAtlas\desktop\dist\AtlasWorkspaceNew 0.1.0.exe` (Aug 16, 142,941,931 B).

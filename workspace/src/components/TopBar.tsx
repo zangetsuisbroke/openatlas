@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { graphReset, newTerm, runDemo, store } from "../ws";
+import { graphReset, runDemo, store } from "../ws";
+import { newChat } from "./OpenCodePanel";
 
-export type LayoutMode = "split" | "graph" | "terminal" | "opencode";
+export type LayoutMode = "split" | "graph" | "opencode";
 
 const ACCENTS: Array<{ name: string; a: string; a2: string }> = [
   { name: "ember", a: "#d62f22", a2: "#7a120c" },
@@ -27,7 +28,7 @@ export default function TopBar({
   const [statsOpen, setStatsOpen] = useState(false);
 
   const cycleLayout = () => {
-    const order: LayoutMode[] = ["split", "terminal", "graph", "opencode"];
+    const order: LayoutMode[] = ["split", "opencode", "graph"];
     const next = order[(order.indexOf(layout) + 1) % order.length];
     onLayout(next);
   };
@@ -66,11 +67,11 @@ export default function TopBar({
       </div>
 
       <div className="tb-actions">
-        <button className="tb-btn accent" onClick={newTerm}>
-          + New Terminal
+        <button className="tb-btn accent" onClick={() => { newChat(); onLayout("opencode"); }}>
+          + New Chat
         </button>
         <button className="tb-btn" onClick={cycleLayout} title="cycle layout">
-          {layout === "split" ? "≡ Layout" : layout === "graph" ? "◫ Graph" : layout === "opencode" ? "⌘ Code" : "▭ Terminal"}
+          {layout === "split" ? "≡ Layout" : layout === "graph" ? "◫ Graph" : "⌘ Code"}
         </button>
         <button className="tb-btn" onClick={() => onLayout(layout === "opencode" ? "split" : "opencode")} title="OpenCode web UI">
           ⌘ OpenCode
@@ -134,7 +135,6 @@ export default function TopBar({
             </div>
           )}
           <div className="dd-actions">
-            <button className="ghost-btn" onClick={() => newTerm()}>spawn terminal</button>
             <button className="ghost-btn" onClick={runDemo}>run demo</button>
           </div>
         </div>

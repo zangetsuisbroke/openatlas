@@ -469,6 +469,48 @@ body,
   }
 }
 
+.oc-tiles {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  overflow-y: auto;
+}
+.oc-tiles.split {
+  flex-direction: row;
+}
+.oc-tile {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.oc-tile-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px;
+  background: linear-gradient(180deg, #131820, #0f1318);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.oc-tile-body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+.oc-tile-body .opencode-frame {
+  position: absolute;
+  inset: 0;
+}
+
 .graph-toolbar,
 .stream-head,
 .terminals-head {
