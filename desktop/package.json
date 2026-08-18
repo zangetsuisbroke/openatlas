@@ -16,7 +16,10 @@
     "files": ["main.js", "package.json"],
     "extraResources": [
       { "from": "../workspace/atlas-workspace.exe", "to": "atlas-workspace.exe" },
-      { "from": "../workspace/vendor/node-pty", "to": "vendor/node-pty" },
+      { "from": "../workspace/vendor/node-pty/package.json", "to": "vendor/node-pty/package.json" },
+      { "from": "../workspace/vendor/node-pty/lib", "to": "vendor/node-pty/lib" },
+      { "from": "../workspace/vendor/node-pty/prebuilds", "to": "vendor/node-pty/prebuilds" },
+      { "from": "../workspace/vendor/node-pty/build", "to": "vendor/node-pty/build" },
       { "from": "../workspace/vendor/opencode", "to": "vendor/opencode" }
     ],
     "win": {
