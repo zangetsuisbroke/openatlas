@@ -11,7 +11,7 @@
   },
   "build": {
     "appId": "com.atlas.workspace",
-    "productName": "AtlasWorkspace",
+    "productName": "AtlasWorkspaceNew",
     "asar": true,
     "files": ["main.js", "package.json"],
     "extraResources": [
@@ -23,7 +23,7 @@
       { "from": "../workspace/vendor/opencode", "to": "vendor/opencode" }
     ],
     "win": {
-      "target": ["nsis", "portable"],
+      "target": ["dir", "zip"],
       "signAndEditExecutable": false
     },
     "nsis": {

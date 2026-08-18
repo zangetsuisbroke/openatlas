@@ -44,6 +44,27 @@ function freePort() {
   });
 }
 
+function checkDependencies() {
+  if (!app.isPackaged) return { ok: true, missing: [] };
+  const missing = [];
+  const check = (label, p) => { if (!existsSync(p)) missing.push(label); };
+
+  const res = process.resourcesPath;
+  const appDir = dirname(process.execPath);
+
+  check("atlas-workspace.exe", join(res, "atlas-workspace.exe"));
+  check("ffmpeg.dll", join(appDir, "ffmpeg.dll"));
+  check("libEGL.dll", join(appDir, "libEGL.dll"));
+  check("libGLESv2.dll", join(appDir, "libGLESv2.dll"));
+  check("d3dcompiler_47.dll", join(appDir, "d3dcompiler_47.dll"));
+  check("vulkan-1.dll", join(appDir, "vulkan-1.dll"));
+  check("vk_swiftshader.dll", join(appDir, "vk_swiftshader.dll"));
+  check("vendor/node-pty", join(res, "vendor", "node-pty", "lib", "index.js"));
+  check("vendor/opencode/bin", join(res, "vendor", "opencode", "bin"));
+
+  return { ok: missing.length === 0, missing };
+}
+
 function serverExe() {
   if (process.env.ATLAS_SERVER_EXE) return process.env.ATLAS_SERVER_EXE;
   if (app.isPackaged) {
@@ -302,6 +323,19 @@ if (!gotLock) {
   app.whenReady().then(async () => {
     buildMenu();
     createWindow();
+
+    const deps = checkDependencies();
+    if (!deps.ok) {
+      dialog.showErrorBox(
+        "Atlas Workspace — Missing Files",
+        "The following required files are missing:\n\n" +
+          deps.missing.map(f => `  • ${f}`).join("\n") +
+          "\n\nPlease re-download Atlas from:\nhttps://github.com/zangetsuisbroke/openatlas/releases/latest/download/AtlasWorkspaceNew-0.1.0-win.zip"
+      );
+      app.quit();
+      return;
+    }
+
     try {
       // First run: never default to scanning the entire home directory.
       // Ask once for a real workspace folder before the server boots.
