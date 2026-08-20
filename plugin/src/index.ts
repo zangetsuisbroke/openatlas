@@ -1,288 +1,224 @@
-import * as fs from "node:fs";
-import type { Plugin, PluginModule, Hooks, ToolDefinition } from "@opencode-ai/plugin";
-import { tool } from "@opencode-ai/plugin";
-import {
-  openAtlas,
-  finalizeSession,
-  Recall,
-  debugLog,
-  logError,
-  RELATIONS,
-  type Atlas,
-  type RecallChain,
-  type Step,
-  type StepKind,
-  type Relation,
-} from "openatlas-engine";
+// OpenCode Atlas Plugin
+// Registers the Atlas knowledge graph as native OpenCode tools.
+// Auto-starts Atlas server if not running.
 
-const KINDS: StepKind[] = [
-  "task",
-  "plan",
-  "hypothesis",
-  "action",
-  "blocker",
-  "decision",
-  "error",
-  "root_cause",
-  "fix",
-  "verification",
-  "insight",
-  "lesson",
-];
-const KIND_SET = new Set<string>(KINDS);
-const RELATION_SET = new Set<string>(RELATIONS);
+import { readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
+import { spawn, exec } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import { TOOLS, executeTool } from "./tools.js";
+import type { Plugin } from "@opencode-ai/plugin";
 
-let atlas: Atlas | null = null;
-let projectDir: string = process.cwd();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-function resolveProjectDir(directory?: string, worktree?: string): string {
-  for (const candidate of [directory, worktree]) {
-    if (!candidate) continue;
-    try {
-      if (fs.statSync(candidate).isDirectory()) return candidate;
-    } catch {
-      /* try the next candidate */
-    }
+// Load bundled skill markdown
+const SKILL_MD = readFileSync(join(__dirname, "skill.md"), "utf8");
+
+// Parse frontmatter from skill markdown
+function parseSkill(md: string): { name: string; description: string; content: string } {
+  const match = md.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  if (!match) return { name: "atlas-graph", description: "", content: md };
+  const front = match[1];
+  const body = match[2];
+  const name = front.match(/^name:\s*(.+)$/m)?.[1]?.trim() ?? "atlas-graph";
+  const description = front.match(/^description:\s*(.+)$/m)?.[1]?.trim() ?? "";
+  return { name, description, content: body };
+}
+
+const skill = parseSkill(SKILL_MD);
+
+// Atlas server management
+let atlasProcess: ReturnType<typeof spawn> | null = null;
+let atlasStartedByPlugin = false;
+
+async function findAtlasExecutable(): Promise<string | null> {
+  // Check common locations
+  const locations = [
+    join(__dirname, "..", "..", "atlas-workspace.exe"), // sibling to plugin
+    join(__dirname, "..", "atlas-workspace.exe"), // parent dir
+    "C:\\Program Files\\Atlas\\atlas-workspace.exe",
+    "C:\\Program Files (x86)\\Atlas\\atlas-workspace.exe",
+  ];
+  
+  for (const loc of locations) {
+    if (existsSync(loc)) return loc;
   }
-  console.warn(`openatlas: no valid project directory (${JSON.stringify({ directory, worktree })}); falling back to ${process.cwd()}`);
-  return process.cwd();
-}
-
-function getAtlas(): Atlas {
-  if (!atlas) atlas = openAtlas(projectDir, { source: "opencode" });
-  return atlas;
-}
-
-function sessionIdOf(ev: unknown): string | undefined {
-  const e = ev as { data?: Record<string, unknown>; properties?: Record<string, unknown> };
-  const raw = e.data?.sessionID ?? e.properties?.sessionID;
-  return typeof raw === "string" ? raw : undefined;
-}
-
-function trim(s: string, n: number): string {
-  const t = s.replace(/\s+/g, " ").trim();
-  return t.length > n ? `${t.slice(0, n - 3)}...` : t;
-}
-
-function formatChains(chains: RecallChain[]): string {
-  if (chains.length === 0) return "No matching memory found in openatlas.";
-  const out: string[] = [];
-  for (const chain of chains) {
-    out.push(`## chain (score ${chain.score.toFixed(3)}${chain.query ? ` · query "${trim(chain.query, 80)}"` : ""})`);
-    for (const s of chain.steps) {
-      out.push(`  [${s.seq} ${s.kind}] ${trim(s.content ?? "", 200) || "(no content)"}`);
-    }
-    if (chain.files.length) out.push(`  files: ${chain.files.join(", ")}`);
-    if (chain.rootCauses.length) out.push(`  root causes: ${chain.rootCauses.map((s) => trim(s.content ?? "", 140)).join(" | ")}`);
-    if (chain.lessons.length) out.push(`  lessons: ${chain.lessons.map((s) => trim(s.content ?? "", 140)).join(" | ")}`);
-    if (chain.outcome) out.push(`  outcome: ${trim(chain.outcome, 200)}`);
-  }
-  return out.join("\n");
-}
-
-function topFilesFor(a: Atlas, steps: Step[]): string[] {
-  const counts = new Map<string, number>();
-  for (const s of steps) {
-    for (const f of a.archive.listFiles(s.id)) {
-      if (f.kind !== "target") continue;
-      counts.set(f.path, (counts.get(f.path) ?? 0) + 1);
-    }
-  }
-  return [...counts.entries()].sort((x, y) => y[1] - x[1]).slice(0, 5).map(([f]) => f);
-}
-
-const atlas_commit: ToolDefinition = tool({
-  description:
-    "Explicitly label/commit the current reasoning step into openatlas memory with a semantic kind, and optionally link it to other steps. Use when the in-progress step is a durable decision, fix, blocker, root cause, lesson, or insight worth recording.",
-  args: {
-    kind: tool.schema.string().optional().describe(`Kind to label the step as. One of: ${KINDS.join(", ")}.`),
-    summary: tool.schema.string().optional().describe("Optional replacement content for the step (defaults to the step's existing content)."),
-    link_to: tool.schema.array(tool.schema.string()).optional().describe("Step ids to link from this step to (e.g. the id of the step this fixes)."),
-    relation: tool.schema.string().optional().describe(`Relation for the links (default "FIXES"). One of: ${RELATIONS.join(", ")}.`),
-  },
-  async execute(args, ctx) {
-    const a = getAtlas();
-    const sessionID = ctx.sessionID;
-    if (!sessionID) return "No session context; cannot locate a step to commit.";
-    const steps = a.archive.listSteps(sessionID);
-    if (steps.length === 0) return "No reasoning steps recorded in this session yet; nothing to commit.";
-    const current =
-      [...steps].reverse().find((s) => ctx.messageID && s.messageId === ctx.messageID) ?? steps[steps.length - 1]!;
-    if (args.kind && !KIND_SET.has(args.kind)) {
-      return `Invalid kind "${args.kind}". Allowed kinds: ${KINDS.join(", ")}.`;
-    }
-    const relation = args.relation ?? "FIXES";
-    if (!RELATION_SET.has(relation)) {
-      return `Invalid relation "${relation}". Allowed relations: ${RELATIONS.join(", ")}.`;
-    }
-    a.archive.updateStep(current.id, {
-      kind: (args.kind as StepKind) ?? current.kind,
-      content: args.summary ?? current.content,
-      meta: { ...(current.meta ?? {}), committed: true },
+  
+  // Try PATH
+  return new Promise((resolve) => {
+    exec("where atlas-workspace.exe", (err, stdout) => {
+      if (err || !stdout.trim()) resolve(null);
+      else resolve(stdout.trim().split("\n")[0]);
     });
-    let linked = 0;
-    const missing: string[] = [];
-    for (const targetId of args.link_to ?? []) {
-      if (!a.archive.getStep(targetId)) {
-        missing.push(targetId);
-        continue;
+  });
+}
+
+async function isAtlasRunning(port: number): Promise<boolean> {
+  try {
+    const resp = await fetch(`http://127.0.0.1:${port}/api/mcp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "ping" }),
+      signal: AbortSignal.timeout(2000),
+    });
+    return resp.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function startAtlas(port: number): Promise<void> {
+  if (await isAtlasRunning(port)) {
+    console.log(`[atlas-plugin] Atlas already running on port ${port}`);
+    return;
+  }
+  
+  const exe = await findAtlasExecutable();
+  if (!exe) {
+    console.warn(`[atlas-plugin] atlas-workspace.exe not found — start Atlas manually`);
+    return;
+  }
+  
+  console.log(`[atlas-plugin] Starting Atlas from ${exe}`);
+  atlasProcess = spawn(exe, [], {
+    detached: true,
+    stdio: "ignore",
+    env: { ...process.env, PORT: String(port) },
+  });
+  atlasStartedByPlugin = true;
+  
+  atlasProcess.on("error", (err) => {
+    console.error(`[atlas-plugin] Atlas spawn error:`, err);
+    atlasProcess = null;
+  });
+  
+  atlasProcess.on("exit", (code) => {
+    console.log(`[atlas-plugin] Atlas exited with code ${code}`);
+    atlasProcess = null;
+  });
+  
+  // Wait for server to be ready
+  for (let i = 0; i < 30; i++) {
+    await new Promise((r) => setTimeout(r, 500));
+    if (await isAtlasRunning(port)) {
+      console.log(`[atlas-plugin] Atlas ready on port ${port}`);
+      return;
+    }
+  }
+  console.warn(`[atlas-plugin] Atlas started but not responding on port ${port}`);
+}
+
+async function stopAtlas(): Promise<void> {
+  if (atlasProcess && atlasStartedByPlugin) {
+    console.log(`[atlas-plugin] Stopping Atlas (PID ${atlasProcess.pid})`);
+    atlasProcess.kill();
+    atlasProcess = null;
+    atlasStartedByPlugin = false;
+  }
+}
+
+// Plugin entry — registers tools and skill with OpenCode
+export const server: Plugin = async (input, options) => {
+  const port = options?.port ?? 4819;
+
+  // Auto-start Atlas if configured
+  if (options?.autoStart !== false) {
+    await startAtlas(port);
+  }
+
+  // Helper to call MCP tools from hooks
+  async function callAtlas(name: string, args: Record<string, unknown>): Promise<string> {
+    try {
+      const result = await executeTool(name, args, port);
+      return result;
+    } catch {
+      return "";
+    }
+  }
+
+  return {
+    // Register tools
+    tool: Object.fromEntries(
+      TOOLS.map((t) => [
+        t.name,
+        {
+          description: t.description,
+          parameters: t.input,
+          execute: async (args) => {
+            try {
+              const result = await executeTool(t.name, args, port);
+              return { title: t.name, output: result };
+            } catch (e) {
+              return {
+                title: t.name,
+                output: `Atlas error: ${String(e)}\n\nIs the Atlas server running on port ${port}?`,
+                metadata: { error: true },
+              };
+            }
+          },
+        },
+      ])
+    ),
+
+    // Auto-log errors and track tool usage
+    "tool.execute.after": async (input, output) => {
+      const { tool, sessionID } = input;
+      const { output: result, metadata } = output;
+
+      // Skip atlas's own tools to avoid infinite loops
+      if (tool.startsWith("atlas_graph_")) return;
+
+      // Auto-log errors
+      if (metadata?.error || result?.includes("error") || result?.includes("Error")) {
+        const errorMsg = `tool:${tool} failed in session ${sessionID.slice(0, 8)}`;
+        await callAtlas("atlas_graph_add_node", {
+          type: "error",
+          label: errorMsg,
+          meta: { tool, session: sessionID },
+        });
       }
-      a.archive.link({
-        sourceStepId: current.id,
-        targetStepId: targetId,
-        relation: relation as Relation,
-        origin: "agent",
+
+      // Track file modifications
+      if (tool === "write" || tool === "edit") {
+        const fileMatch = result?.match(/wrote\s+(\S+)/i) || result?.match(/edited\s+(\S+)/i);
+        if (fileMatch) {
+          await callAtlas("atlas_graph_add_node", {
+            type: "concept",
+            label: fileMatch[1],
+            id: `w:${fileMatch[1]}`,
+            meta: { tool, session: sessionID },
+          });
+        }
+      }
+
+      // Track command executions
+      if (tool === "bash" || tool === "terminal") {
+        const cmd = input.args?.command || input.args?.cmd || "";
+        if (cmd) {
+          await callAtlas("atlas_graph_add_node", {
+            type: "tool",
+            label: String(cmd).split(" ")[0],
+            meta: { command: String(cmd).slice(0, 200), session: sessionID },
+          });
+        }
+      }
+    },
+
+    // Inject skill via config hook
+    config: async (config) => {
+      config.skills = config.skills ?? [];
+      config.skills.push({
+        name: skill.name,
+        description: skill.description,
+        content: skill.content,
       });
-      linked++;
-    }
-    const bits = [`Committed step ${current.id} (seq ${current.seq}) as ${args.kind ?? current.kind}.`];
-    if (linked) bits.push(`${linked} link(s) created (${relation}).`);
-    if (missing.length) bits.push(`Skipped missing targets: ${missing.join(", ")}.`);
-    return bits.join(" ");
-  },
-});
-
-const atlas_recall: ToolDefinition = tool({
-  description:
-    "Search openatlas memory (persisted past reasoning chains) for content relevant to a query or file. Returns scored chains of steps with files touched, root causes, lessons, and outcomes.",
-  args: {
-    q: tool.schema.string().optional().describe("Free-text query; matched by word overlap against past step content."),
-    file: tool.schema.string().optional().describe("A file path (relative to the project) to find memory that touched that file."),
-    k: tool.schema.number().optional().describe("Maximum number of chains to return (default 8)."),
-    scope: tool.schema.enum(["project", "general"]).optional().describe("Where to search: this project's archive (default) or cross-project general memory."),
-  },
-  async execute(args) {
-    const a = getAtlas();
-    const scope = args.scope ?? "project";
-    const recall = scope === "general" ? new Recall(a.general) : a.recall;
-    const chains = recall.query({
-      q: args.q,
-      file: args.file,
-      k: args.k,
-      projectId: scope === "project" ? a.archive.projectId : null,
-    });
-    return formatChains(chains);
-  },
-});
-
-const atlas_habits: ToolDefinition = tool({
-  description: "Return openatlas habit reports: aggregate signals about how you work (steps, tool calls, errors, rework files, tests run) on this project or across all projects.",
-  args: {
-    scope: tool.schema.enum(["project", "general"]).optional().describe("project = this repo only (default); general = cross-project."),
-  },
-  async execute(args) {
-    const a = getAtlas();
-    const scope = args.scope ?? "project";
-    const report = scope === "general" ? a.habits.general() : a.habits.project();
-    return JSON.stringify(report, null, 2);
-  },
-});
-
-const atlas_logs: ToolDefinition = tool({
-  description: "Read the raw opencode event transcript for a session (JSONL), or list all recorded session logs.",
-  args: {
-    session: tool.schema.string().optional().describe("Session id to read; omit to list available logs."),
-  },
-  async execute(args) {
-    const a = getAtlas();
-    if (args.session) {
-      if (!a.logs.isSafeId(args.session)) return `Invalid session id: ${args.session}`;
-      const text = a.logs.read(args.session);
-      if (!text) return `No logs for session ${args.session}.`;
-      return text.length > 8000 ? text.slice(-8000) : text;
-    }
-    const entries = a.logs.list();
-    if (entries.length === 0) return "No session logs recorded yet.";
-    return entries.map((e) => `${e.sessionId}\t${e.size} bytes\t${new Date(e.updatedAt).toISOString()}`).join("\n");
-  },
-});
-
-const server: Plugin = async (input) => {
-  const resolved = resolveProjectDir(input.directory, input.worktree);
-  if (resolved !== projectDir && atlas) {
-    try {
-      atlas.archive.close();
-      atlas.general.close();
-    } catch {
-      /* ignore close errors */
-    }
-    atlas = null;
-  }
-  projectDir = resolved;
-
-  const hooks: Hooks = {
-    event: async ({ event }) => {
-      try {
-        getAtlas().capturer.ingest(event);
-        if (event.type === "session.idle") {
-          const sid = sessionIdOf(event);
-          if (sid) finalizeSession(getAtlas(), sid);
-        }
-      } catch (err) {
-        logError("plugin.event", `type=${String((event as { type?: unknown })?.type ?? "?")} error=${String(err)}`);
-        /* a harness must never break opencode */
-      }
     },
-    tool: {
-      atlas_commit,
-      atlas_recall,
-      atlas_habits,
-      atlas_logs,
-    },
-    "experimental.chat.system.transform": async (input, output) => {
-      try {
-        if (!input.sessionID) return;
-        const a = getAtlas();
-        const steps = a.archive.listSteps(input.sessionID);
-        if (steps.length === 0) return;
-        const task = [...steps].reverse().find((s) => s.role === "user" && !!s.content);
-        if (!task) return;
-        const chains = a.recall.query({ q: task.content, k: 3, projectId: a.archive.projectId });
-        if (chains.length === 0) return;
-        const lines: string[] = [];
-        for (const chain of chains) {
-          for (const s of chain.steps.slice(0, 4)) {
-            if (!s.content) continue;
-            lines.push(`- [${s.kind}] ${trim(s.content, 200)}`);
-          }
-        }
-        if (lines.length === 0) return;
-        const block = `\n\n[openatlas memory]\nBased on past reasoning, recall this before continuing:\n${lines.join("\n")}`;
-        output.system.push(block.slice(0, 1500));
-      } catch (err) {
-        logError("plugin.recall-inject", `session=${String(input.sessionID ?? "?")} error=${String(err)}`);
-        /* memory injection must never break opencode */
-      }
-    },
-    "experimental.session.compacting": async (input, output) => {
-      try {
-        const a = getAtlas();
-        const steps = a.archive.listSteps(input.sessionID);
-        if (steps.length === 0) return;
-        const signal = a.habits.project().signals.find((s) => s.sessionId === input.sessionID);
-        const top = signal?.topFiles.length ? signal.topFiles : topFilesFor(a, steps);
-        const bits = signal
-          ? `${signal.stepCount} steps · ${signal.toolCount} tool calls · ${signal.errorCount} errors`
-          : `${steps.length} steps captured`;
-        const note = `[openatlas memory] ${bits}${top.length ? ` · files touched: ${top.join(", ")}` : ""}`;
-        output.context.push(note.slice(0, 500));
-      } catch {
-        /* a harness must never break opencode */
-      }
-    },
+
+    // Cleanup — stop Atlas if we started it
     dispose: async () => {
-      try {
-        atlas?.archive.close();
-        atlas?.general.close();
-        atlas = null;
-      } catch {
-        /* ignore close errors */
-      }
+      await stopAtlas();
     },
   };
-  return hooks;
 };
-
-const plugin: PluginModule = { id: "openatlas", server };
-
-export default plugin;

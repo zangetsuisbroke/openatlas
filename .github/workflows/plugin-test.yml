@@ -1,0 +1,41 @@
+name: Plugin Tests
+
+on:
+  push:
+    paths:
+      - "plugin/**"
+      - "workspace/server/**"
+  pull_request:
+    paths:
+      - "plugin/**"
+      - "workspace/server/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install plugin dependencies
+        run: bun install
+        working-directory: plugin
+
+      - name: Build workspace (server only)
+        run: bun run build
+        working-directory: workspace
+
+      - name: Start Atlas server
+        run: |
+          bun run --cwd workspace server/index.ts &
+          sleep 3
+          curl -sf http://localhost:4819/api/mcp -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"ping"}' || exit 1
+
+      - name: Run integration tests
+        run: bun run test
+        working-directory: plugin
+
+      - name: Stop Atlas
+        if: always()
+        run: pkill -f atlas-workspace || true

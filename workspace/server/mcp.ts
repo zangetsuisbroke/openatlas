@@ -11,6 +11,9 @@ export interface GraphAccess {
   nodes(): GNode[];
   links(): GLink[];
   refresh(): void;
+  addNode(type: GNode["type"], label: string, id?: string, meta?: Record<string, unknown>): GNode;
+  addLink(source: string, target: string, relation: GLink["relation"]): GLink;
+  removeNode(id: string): boolean;
 }
 
 let graph: GraphAccess | null = null;
@@ -70,6 +73,61 @@ function toolList(): unknown {
           to: { type: "string", description: "target node id" },
         },
         required: ["from", "to"],
+      },
+    },
+    {
+      name: "atlas_graph_add_node",
+      description:
+        "Create a new node in the knowledge graph. Use to track decisions, tasks, memories, errors, or concepts that emerge during work. The graph is live — nodes appear immediately in the UI.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          type: { type: "string", description: "node type: concept, decision, task, memory, or error" },
+          label: { type: "string", description: "human-readable label for the node" },
+          id: { type: "string", description: "optional custom id (auto-generated if omitted)" },
+          meta: { type: "object", description: "optional metadata (e.g. {file: 'src/foo.ts', tool: 'git'})" },
+        },
+        required: ["type", "label"],
+      },
+    },
+    {
+      name: "atlas_graph_add_link",
+      description:
+        "Create a relationship between two existing nodes. Use to connect entities — e.g. a file relates to a decision, a task depends on a concept.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          source: { type: "string", description: "source node id" },
+          target: { type: "string", description: "target node id" },
+          relation: { type: "string", description: "relation type: relates, depends, conflicts, derives, observes, activates, edits, imports" },
+        },
+        required: ["source", "target", "relation"],
+      },
+    },
+    {
+      name: "atlas_graph_remove_node",
+      description:
+        "Remove a node and all its links from the graph. Use to clean up stale or incorrect entries.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "node id to remove" },
+        },
+        required: ["id"],
+      },
+    },
+    {
+      name: "atlas_graph_log_error",
+      description:
+        "Log an error node to the graph for tracking. Optionally link it to a file and/or tool. Use when you encounter errors worth remembering.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          message: { type: "string", description: "error message or code" },
+          file: { type: "string", description: "optional file path where error occurred" },
+          tool: { type: "string", description: "optional tool that produced the error" },
+        },
+        required: ["message"],
       },
     },
   ];
@@ -198,11 +256,62 @@ function pathTool(args: Record<string, unknown>): unknown {
   return { content: [{ type: "text", text: path.map((id) => byId.get(id)?.label ?? id).join(" → ") }] };
 }
 
+// ---------- write tools ----------
+function addNodeTool(args: Record<string, unknown>): unknown {
+  const type = String(args.type ?? "concept") as any;
+  const label = String(args.label ?? "");
+  const id = args.id ? String(args.id) : undefined;
+  const meta = args.meta && typeof args.meta === "object" && !Array.isArray(args.meta) ? args.meta as Record<string, unknown> : undefined;
+  if (!graph) return { content: [{ type: "text", text: "graph not available" }], isError: true };
+  if (!label) return { content: [{ type: "text", text: "label is required" }], isError: true };
+  const validTypes = ["concept", "decision", "task", "memory", "error"];
+  if (!validTypes.includes(type)) return { content: [{ type: "text", text: `type must be one of: ${validTypes.join(", ")}` }], isError: true };
+  const node = graph.addNode(type, label, id, meta);
+  return { content: [{ type: "text", text: `created ${node.id} [${node.type}] ${node.label}` }] };
+}
+
+function addLinkTool(args: Record<string, unknown>): unknown {
+  const source = String(args.source ?? "");
+  const target = String(args.target ?? "");
+  const relation = String(args.relation ?? "relates") as any;
+  if (!graph) return { content: [{ type: "text", text: "graph not available" }], isError: true };
+  if (!source || !target) return { content: [{ type: "text", text: "source and target are required" }], isError: true };
+  const validRelations = ["relates", "depends", "conflicts", "derives", "observes", "activates", "edits", "imports"];
+  if (!validRelations.includes(relation)) return { content: [{ type: "text", text: `relation must be one of: ${validRelations.join(", ")}` }], isError: true };
+  graph.addLink(source, target, relation);
+  return { content: [{ type: "text", text: `linked ${source} →${relation}→ ${target}` }] };
+}
+
+function removeNodeTool(args: Record<string, unknown>): unknown {
+  const id = String(args.id ?? "");
+  if (!graph) return { content: [{ type: "text", text: "graph not available" }], isError: true };
+  if (!id) return { content: [{ type: "text", text: "id is required" }], isError: true };
+  const ok = graph.removeNode(id);
+  return { content: [{ type: "text", text: ok ? `removed ${id}` : `node "${id}" not found` }], isError: !ok };
+}
+
+function logErrorTool(args: Record<string, unknown>): unknown {
+  const message = String(args.message ?? "");
+  const file = args.file ? String(args.file) : undefined;
+  const tool = args.tool ? String(args.tool) : undefined;
+  if (!graph) return { content: [{ type: "text", text: "graph not available" }], isError: true };
+  if (!message) return { content: [{ type: "text", text: "message is required" }], isError: true };
+  const id = `e:${message.toLowerCase().replace(/[^a-z0-9]+/g, "_").slice(0, 40)}`;
+  const node = graph.addNode("error", message, id, { file, tool });
+  if (file) graph.addLink(`f:${file}`, id, "relates");
+  if (tool) graph.addLink(`t:${tool}`, id, "relates");
+  return { content: [{ type: "text", text: `logged error ${node.id}: ${message}` }] };
+}
+
 const TOOLS: Record<string, (args: Record<string, unknown>) => unknown> = {
   atlas_graph_search: searchTool,
   atlas_graph_query: queryTool,
   atlas_graph_snapshot: snapshotTool,
   atlas_graph_path: pathTool,
+  atlas_graph_add_node: addNodeTool,
+  atlas_graph_add_link: addLinkTool,
+  atlas_graph_remove_node: removeNodeTool,
+  atlas_graph_log_error: logErrorTool,
 };
 
 // ---------- JSON-RPC handling ----------

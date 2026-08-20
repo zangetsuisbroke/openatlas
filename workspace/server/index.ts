@@ -39,6 +39,14 @@ class GraphStore {
   snap(): { nodes: GNode[]; links: GLink[] } {
     return { nodes: [...this.nodes.values()], links: [...this.links.values()] };
   }
+  remove(id: string): boolean {
+    if (!this.nodes.has(id)) return false;
+    this.nodes.delete(id);
+    for (const [key, l] of [...this.links.entries()]) {
+      if (l.source === id || l.target === id) this.links.delete(key);
+    }
+    return true;
+  }
   clear() {
     this.nodes.clear();
     this.links.clear();
@@ -688,6 +696,32 @@ setGraphAccess({
   nodes: () => [...graph.nodes.values()],
   links: () => [...graph.links.values()],
   refresh: () => refreshScan(),
+  addNode(type, label, id, meta) {
+    const nodeId = id ?? `${type}:${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+    const node: GNode = {
+      id: nodeId,
+      label,
+      type,
+      val: 1,
+      created: Date.now(),
+      lastActive: Date.now(),
+      ...(meta as Record<string, unknown>),
+    };
+    graph.upsertNode(node);
+    broadcast({ type: "graph", data: { nodes: [node], links: [] } });
+    return node;
+  },
+  addLink(source, target, relation) {
+    graph.link(source, target, relation);
+    const link: GLink = { source, target, relation, strength: 1 };
+    broadcast({ type: "graph", data: { nodes: [], links: [link] } });
+    return link;
+  },
+  removeNode(id) {
+    const ok = graph.remove(id);
+    if (ok) broadcast({ type: "graph", data: { nodes: [], links: [], removed: [id] } });
+    return ok;
+  },
 });
 // kick off initial workspace scan in the background (non-blocking)
 setTimeout(() => refreshScan(), 500);

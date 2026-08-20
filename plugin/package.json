@@ -1,25 +1,21 @@
 {
-  "name": "openatlas-plugin",
+  "name": "opencode-atlas",
   "version": "0.1.0",
-  "private": true,
+  "description": "Atlas knowledge graph plugin for OpenCode — exposes live workspace graph as native tools",
   "type": "module",
-  "description": "opencode harness: auto-captures reasoning into openatlas memory",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
-  "exports": {
-    ".": "./src/index.ts"
-  },
+  "exports": "./src/index.ts",
   "scripts": {
-    "build": "bun build ./src/index.ts --target=bun --outdir=dist",
-    "typecheck": "bunx tsc --noEmit",
-    "test": "bun test"
+    "test": "bun run tests/integration.test.ts",
+    "test:watch": "bun run --watch tests/integration.test.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "openatlas-engine": "workspace:*"
+    "@opencode-ai/plugin": "latest"
   },
-  "devDependencies": {
-    "@opencode-ai/plugin": "latest",
-    "@types/bun": "latest",
-    "typescript": "latest"
+  "keywords": ["opencode", "opencode-plugin", "atlas", "knowledge-graph", "code-intelligence"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zangetsuisbroke/openatlas"
   }
 }

@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="description" content="OpenAtlas — local-first code intelligence. Live knowledge graph of your codebase, a local reasoning agent, real PTY terminals. Runs entirely on your machine." />
+<meta name="description" content="OpenAtlas — local-first code intelligence. Live knowledge graph of your codebase, a local reasoning agent, OpenCode plugin. Runs entirely on your machine." />
 <meta property="og:title" content="OpenAtlas — know your code while it's still moving" />
-<meta property="og:description" content="Live graph, local reasoning, real terminals. One process on your machine." />
+<meta property="og:description" content="Live graph, local reasoning, OpenCode plugin. One process on your machine." />
 <title>OpenAtlas — know your code while it's still moving</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 21 7v10l-9 5-9-5V7z' fill='%230c0b09' stroke='%23e6392b' stroke-width='1.6'/%3E%3Ccircle cx='12' cy='12' r='3.4' fill='none' stroke='%23e6392b' stroke-width='1.4'/%3E%3C/svg%3E" />
 <style>
@@ -247,6 +247,9 @@
   .dl-note { margin-top: 22px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--faint); line-height: 2; }
   .dl-note .r { color: var(--red-ink); font-weight: 600; }
 
+  .install-prompt { margin-top: 48px; }
+  .install-prompt .term { max-width: 600px; }
+
   .final { padding: 40px 0 110px; }
   .final .in { text-align: center; border-top: 1px solid var(--line); padding-top: 90px; }
   .final h2 { font-size: clamp(34px, 5vw, 64px); font-weight: 700; letter-spacing: -0.03em; }
@@ -348,7 +351,7 @@
 
 <div class="ticker" aria-hidden="true">
   <div class="ticker-track" id="ticker">
-    <span>FILE GRAPHS<i>◆</i>LOCAL REASONING<i>◆</i>OPENCODE AGENT<i>◆</i>ZERO TELEMETRY<i>◆</i>ONE EVENT STREAM<i>◆</i>RUNS ENTIRELY ON YOUR MACHINE<i>◆</i>WINDOWS 10 / 11<i>◆</i></span>
+    <span>FILE GRAPHS<i>◆</i>LOCAL REASONING<i>◆</i>OPENCODE PLUGIN<i>◆</i>ZERO TELEMETRY<i>◆</i>ONE EVENT STREAM<i>◆</i>RUNS ENTIRELY ON YOUR MACHINE<i>◆</i>WINDOWS 10 / 11<i>◆</i></span>
   </div>
 </div>
 
@@ -362,6 +365,7 @@
       <a href="#graph">graph</a>
       <a href="#reason">reason</a>
       <a href="#agent">agent</a>
+      <a href="#plugin">plugin</a>
       <a href="#download">download</a>
     </div>
     <a class="nav-cta" href="#download">Download →</a>
@@ -384,7 +388,7 @@
         agent. No cloud. No index of your code. Just a process on your disk.
       </p>
       <div class="hero-cta rv">
-        <a class="btn btn-primary" href="#download">Download for Windows <span class="arw">→</span></a>
+        <a class="btn btn-primary" href="https://github.com/zangetsuisbroke/openatlas/tree/master/plugin">Install Plugin <span class="arw">→</span></a>
         <a class="btn btn-ghost" href="#agent">Meet the agent</a>
       </div>
       <div class="hero-meta rv">
@@ -414,11 +418,11 @@
 <section class="download-bar">
   <div class="wrap download-inner">
     <div class="download-meta rv">
-      <b>OPENATLAS v0.1.0</b><br />
-      windows 10 / 11 · x64 · <span class="r">free, runs fully local</span>
+      <b>OPENATLAS PLUGIN v0.1.0</b><br />
+      opencode plugin · github · <span class="r">free, runs fully local</span>
     </div>
     <div class="dl-btns rv">
-      <a class="btn btn-primary" href="https://github.com/zangetsuisbroke/openatlas/releases/latest/download/AtlasWorkspaceNew-0.1.0-win.zip">Download <span class="arw">↓</span></a>
+      <a class="btn btn-primary" href="https://github.com/zangetsuisbroke/openatlas/tree/master/plugin">View on GitHub <span class="arw">→</span></a>
     </div>
   </div>
 </section>
@@ -441,7 +445,7 @@
 <section class="features wrap">
   <div class="sec-head rv">
     <span class="t">What it does</span>
-    <span class="n">THE LAYERS / 01–04</span>
+    <span class="n">THE LAYERS / 01–05</span>
   </div>
 
   <article class="feat" id="graph">
@@ -539,6 +543,24 @@
       </svg>
     </div>
   </article>
+
+  <article class="feat" id="plugin">
+    <div class="idx rv">05</div>
+    <div class="lab rv"><b>Plugin</b>your agent, connected</div>
+    <p class="rv">
+      Install the <b>OpenCode plugin</b> and your agent gets native access to the knowledge graph.
+      Search files, track decisions, log errors — all automatically. The agent sees your
+      project structure in real-time and writes back as it works.
+    </p>
+    <div class="art rv" aria-hidden="true">
+      <div class="mono">
+        <div><span class="g">$ npm install -g opencode-atlas</span></div>
+        <div><span class="c">8 tools registered</span></div>
+        <div>atlas_graph_search · add_node · log_error</div>
+        <div><span class="g">agent now tracks decisions automatically</span></div>
+      </div>
+    </div>
+  </article>
 </section>
 
 <section class="privacy wrap">
@@ -562,24 +584,44 @@
   </div>
   <div class="dl-grid">
     <div class="dl-card rv">
-      <span class="k">Windows x64 — zip</span>
-      <h3>Atlas Workspace</h3>
-      <p>Extract the zip and run AtlasWorkspaceNew.exe. No installer needed — runs from any folder.</p>
-      <div class="spec">AtlasWorkspaceNew-0.1.0-win.zip</div>
-      <a class="btn btn-primary" href="https://github.com/zangetsuisbroke/openatlas/releases/latest/download/AtlasWorkspaceNew-0.1.0-win.zip">Download <span class="arw">↓</span></a>
+      <span class="k">OpenCode Plugin — GitHub</span>
+      <h3>Atlas Graph Plugin</h3>
+      <p>Native tools for OpenCode. Search, track decisions, log errors — the agent sees your project structure automatically.</p>
+      <div class="spec">npx skills add zangetsuisbroke/openatlas/plugin</div>
+      <a class="btn btn-primary" href="https://github.com/zangetsuisbroke/openatlas/tree/master/plugin">View on GitHub <span class="arw">→</span></a>
     </div>
   </div>
   <p class="dl-note rv">
     Windows 10/11 · x64 · <span class="r">free</span> — the download is a signed distribution of the open-source build.
     SHA-256 checksums are published on the release page. No account, no telemetry, no trials.
   </p>
+
+  <div class="install-prompt rv">
+    <div class="term">
+      <div class="term-glow"></div>
+      <div class="term-bar">
+        <span class="t">terminal — install plugin</span>
+        <span class="dots"><i></i><i></i><i></i></span>
+      </div>
+      <div class="term-body" style="height: auto; min-height: 120px;">
+        <div><span class="p">$</span> <span class="o">npx skills add zangetsuisbroke/openatlas/plugin</span></div>
+        <div><span class="d">installing atlas-graph plugin…</span></div>
+        <div><span class="c">8 tools registered · skill bundled</span></div>
+        <div><span class="ok">done · agent now has graph access</span></div>
+        <div style="margin-top: 12px;"><span class="p">$</span> <span class="o">opencode</span></div>
+        <div><span class="d">atlas connected on port 4819</span></div>
+        <div><span class="d">100 nodes · 142 links · live</span></div>
+        <div><span class="ok">ready</span> <span class="cursor"></span></div>
+      </div>
+    </div>
+  </div>
 </section>
 
 <section class="final wrap">
   <div class="in rv">
-    <h2>It's a workspace. <span class="red">Make it yours.</span></h2>
-    <p>Download the app and point it at any folder. The graph builds itself while you type.</p>
-    <a class="btn btn-primary" href="https://github.com/zangetsuisbroke/openatlas/releases/latest/download/AtlasWorkspaceNew-0.1.0-win.zip">Download for Windows <span class="arw">→</span></a>
+    <h2>Your agent. <span class="red">Your graph.</span></h2>
+    <p>Install the plugin and your OpenCode agent sees your project structure in real-time.</p>
+    <a class="btn btn-primary" href="https://github.com/zangetsuisbroke/openatlas/tree/master/plugin">Install Plugin <span class="arw">→</span></a>
   </div>
 </section>
 
@@ -593,6 +635,7 @@
       <a href="#graph">graph</a>
       <a href="#reason">reason</a>
       <a href="#agent">agent</a>
+      <a href="#plugin">plugin</a>
       <a href="#download">download</a>
     </div>
     <div class="foot-clock" id="clock">— — — —</div>
@@ -612,7 +655,9 @@
     ['<span class="d">reading graph… local model…</span>', 1400],
     ['<span class="c">sync scan blocked event loop 2.3s.</span> <span class="ok">patched.</span>', 1100],
     ['<span class="p">></span> <span class="o">refactor scan to async</span>', 600],
-    ['<span class="ok">done · 238ms · zero freeze</span>', 400]
+    ['<span class="ok">done · 238ms · zero freeze</span>', 400],
+    ['<span class="p">$</span> <span class="o">npm install -g opencode-atlas</span>', 500],
+    ['<span class="c">8 tools registered · agent tracks decisions</span>', 600]
   ];
   var li = 0;
   function nextLine() {
