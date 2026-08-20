@@ -3,6 +3,8 @@ name: atlas-graph
 description: When you need additional context about the workspace — its structure, what files/folders/packages exist, how things are connected (imports, dependencies, active tools and tasks) — or when you need to track decisions, tasks, memories, and errors — use the atlas_graph_* tools. Prefer this over guessing when you need to know how an entity relates to the rest of the project.
 ---
 
+# Atlas Graph
+
 ## What I do
 - Expose the live Atlas knowledge graph: real files, folders, packages, imports, git branch, tools, concepts, decisions, tasks, memories and errors that have been observed.
 - The graph is maintained live: workspace scans plus every command run in the terminal.
